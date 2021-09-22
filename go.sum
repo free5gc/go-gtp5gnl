@@ -1,0 +1,7 @@
+github.com/khirono/go-genl v0.0.0-20210921081923-3c6ec22f6cbc h1:o4G/0grp0vbvmIr8lLyfd7UIyRdB+cEAwPXfpDdaMDo=
+github.com/khirono/go-genl v0.0.0-20210921081923-3c6ec22f6cbc/go.mod h1:eJYNgOqSqtE4AoUZ/jtmHesFygiVhETPu+MJkYssv7Y=
+github.com/khirono/go-nl v0.0.0-20210921070215-6fa2e8626a9f/go.mod h1:PzYeSjD38fzV7mX5DuaCZvnwx2kD/o7XgHyzuJxoi7U=
+github.com/khirono/go-nl v0.0.0-20210922003217-7d2d5a6af82c h1:UaeXicz5olR/drBYgpjvSzixfB7bcF+eAynITIH4OkY=
+github.com/khirono/go-nl v0.0.0-20210922003217-7d2d5a6af82c/go.mod h1:PzYeSjD38fzV7mX5DuaCZvnwx2kD/o7XgHyzuJxoi7U=
+github.com/khirono/go-rtnllink v0.0.0-20210921082024-947b8b46201e h1:7S8l9vRPrF6wcwG/HQZtoSLjLXKHZvda0DO9fTcSY7U=
+github.com/khirono/go-rtnllink v0.0.0-20210921082024-947b8b46201e/go.mod h1:NrehntYYk97Te5vLY7g410JZ6rLwbhAV5BF9myWsFeE=

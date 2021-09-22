@@ -1,0 +1,17 @@
+package gtp5gnl
+
+const (
+	CMD_UNSPEC = iota
+
+	CMD_ADD_PDR
+	CMD_ADD_FAR
+	CMD_ADD_QER
+
+	CMD_DEL_PDR
+	CMD_DEL_FAR
+	CMD_DEL_QER
+
+	CMD_GET_PDR
+	CMD_GET_FAR
+	CMD_GET_QER
+)
