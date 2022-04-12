@@ -11,6 +11,7 @@ const (
 	FAR_APPLY_ACTION
 	FAR_FORWARDING_PARAMETER
 	FAR_RELATED_TO_PDR
+	FAR_SEID
 )
 
 type FAR struct {
@@ -18,6 +19,7 @@ type FAR struct {
 	Action uint8
 	Param  *ForwardParam
 	PDRIDs []uint16
+	SEID   *uint64
 }
 
 func DecodeFAR(b []byte) (*FAR, error) {
@@ -45,6 +47,9 @@ func DecodeFAR(b []byte) (*FAR, error) {
 				far.PDRIDs = append(far.PDRIDs, v)
 				d = d[2:]
 			}
+		case FAR_SEID:
+			v := native.Uint64(b[n:])
+			far.SEID = &v
 		}
 		b = b[hdr.Len.Align():]
 	}

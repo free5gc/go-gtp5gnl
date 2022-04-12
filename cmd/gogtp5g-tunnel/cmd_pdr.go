@@ -252,13 +252,13 @@ func ParsePDROptions(args []string) ([]nl.Attr, error) {
 	return attrs, nil
 }
 
-// add pdr <ifname> <id> [options...]
+// add pdr <ifname> <oid> [options...]
 func CmdAddPDR(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -290,16 +290,16 @@ func CmdAddPDR(args []string) error {
 		return err
 	}
 
-	return gtp5gnl.CreatePDR(c, link, id, attrs)
+	return gtp5gnl.CreatePDROID(c, link, oid, attrs)
 }
 
-// mod pdr <ifname> <id> [options...]
+// mod pdr <ifname> <oid> [options...]
 func CmdModPDR(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -331,16 +331,16 @@ func CmdModPDR(args []string) error {
 		return err
 	}
 
-	return gtp5gnl.UpdatePDR(c, link, id, attrs)
+	return gtp5gnl.UpdatePDROID(c, link, oid, attrs)
 }
 
-// delete pdr <ifname> <id>
+// delete pdr <ifname> <oid>
 func CmdDeletePDR(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -368,16 +368,16 @@ func CmdDeletePDR(args []string) error {
 		return err
 	}
 
-	return gtp5gnl.RemovePDR(c, link, id)
+	return gtp5gnl.RemovePDROID(c, link, oid)
 }
 
-// get pdr <ifname> <id>
+// get pdr <ifname> <oid>
 func CmdGetPDR(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -405,7 +405,7 @@ func CmdGetPDR(args []string) error {
 		return err
 	}
 
-	pdr, err := gtp5gnl.GetPDR(c, link, id)
+	pdr, err := gtp5gnl.GetPDROID(c, link, oid)
 	if err != nil {
 		return err
 	}

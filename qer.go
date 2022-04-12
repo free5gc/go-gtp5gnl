@@ -1,6 +1,7 @@
 package gtp5gnl
 
 import (
+	"fmt"
 	"syscall"
 
 	"github.com/khirono/go-genl"
@@ -27,12 +28,20 @@ import (
 // o QER_PPI: u8
 //
 func CreateQER(c *Client, link *Link, qerid int, attrs []nl.Attr) error {
+	return CreateQEROID(c, link, OID{uint64(qerid)}, attrs)
+}
+
+func CreateQEROID(c *Client, link *Link, oid OID, attrs []nl.Attr) error {
 	flags := syscall.NLM_F_EXCL
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
 	err := req.Append(genl.Header{Cmd: CMD_ADD_QER})
 	if err != nil {
 		return err
+	}
+	qerid, ok := oid.ID()
+	if !ok {
+		return fmt.Errorf("invalid oid: %v", oid)
 	}
 	err = req.Append(nl.AttrList{
 		{
@@ -46,6 +55,16 @@ func CreateQER(c *Client, link *Link, qerid int, attrs []nl.Attr) error {
 	})
 	if err != nil {
 		return err
+	}
+	seid, ok := oid.SEID()
+	if ok {
+		err = req.Append(&nl.Attr{
+			Type:  QER_SEID,
+			Value: nl.AttrU64(seid),
+		})
+		if err != nil {
+			return err
+		}
 	}
 	err = req.Append(nl.AttrList(attrs))
 	if err != nil {
@@ -56,12 +75,20 @@ func CreateQER(c *Client, link *Link, qerid int, attrs []nl.Attr) error {
 }
 
 func UpdateQER(c *Client, link *Link, qerid int, attrs []nl.Attr) error {
+	return UpdateQEROID(c, link, OID{uint64(qerid)}, attrs)
+}
+
+func UpdateQEROID(c *Client, link *Link, oid OID, attrs []nl.Attr) error {
 	flags := syscall.NLM_F_REPLACE
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
 	err := req.Append(genl.Header{Cmd: CMD_ADD_QER})
 	if err != nil {
 		return err
+	}
+	qerid, ok := oid.ID()
+	if !ok {
+		return fmt.Errorf("invalid oid: %v", oid)
 	}
 	err = req.Append(nl.AttrList{
 		{
@@ -75,6 +102,16 @@ func UpdateQER(c *Client, link *Link, qerid int, attrs []nl.Attr) error {
 	})
 	if err != nil {
 		return err
+	}
+	seid, ok := oid.SEID()
+	if ok {
+		err = req.Append(&nl.Attr{
+			Type:  QER_SEID,
+			Value: nl.AttrU64(seid),
+		})
+		if err != nil {
+			return err
+		}
 	}
 	err = req.Append(nl.AttrList(attrs))
 	if err != nil {
@@ -85,6 +122,10 @@ func UpdateQER(c *Client, link *Link, qerid int, attrs []nl.Attr) error {
 }
 
 func RemoveQER(c *Client, link *Link, qerid int) error {
+	return RemoveQEROID(c, link, OID{uint64(qerid)})
+}
+
+func RemoveQEROID(c *Client, link *Link, oid OID) error {
 	flags := syscall.NLM_F_EXCL
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
@@ -92,6 +133,10 @@ func RemoveQER(c *Client, link *Link, qerid int) error {
 	if err != nil {
 		return err
 	}
+	qerid, ok := oid.ID()
+	if !ok {
+		return fmt.Errorf("invalid oid: %v", oid)
+	}
 	err = req.Append(nl.AttrList{
 		{
 			Type:  LINK,
@@ -105,16 +150,34 @@ func RemoveQER(c *Client, link *Link, qerid int) error {
 	if err != nil {
 		return err
 	}
+	seid, ok := oid.SEID()
+	if ok {
+		err = req.Append(&nl.Attr{
+			Type:  QER_SEID,
+			Value: nl.AttrU64(seid),
+		})
+		if err != nil {
+			return err
+		}
+	}
 	_, err = c.Do(req)
 	return err
 }
 
 func GetQER(c *Client, link *Link, qerid int) (*QER, error) {
+	return GetQEROID(c, link, OID{uint64(qerid)})
+}
+
+func GetQEROID(c *Client, link *Link, oid OID) (*QER, error) {
 	flags := syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
 	err := req.Append(genl.Header{Cmd: CMD_GET_QER})
 	if err != nil {
 		return nil, err
+	}
+	qerid, ok := oid.ID()
+	if !ok {
+		return nil, fmt.Errorf("invalid oid: %v", oid)
 	}
 	err = req.Append(nl.AttrList{
 		{
@@ -128,6 +191,16 @@ func GetQER(c *Client, link *Link, qerid int) (*QER, error) {
 	})
 	if err != nil {
 		return nil, err
+	}
+	seid, ok := oid.SEID()
+	if ok {
+		err = req.Append(&nl.Attr{
+			Type:  QER_SEID,
+			Value: nl.AttrU64(seid),
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	rsps, err := c.Do(req)
 	if err != nil {

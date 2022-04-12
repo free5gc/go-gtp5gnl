@@ -15,6 +15,7 @@ const (
 	QER_PPI
 	QER_RCSR // deplicated
 	QER_RELATED_TO_PDR
+	QER_SEID
 )
 
 type QER struct {
@@ -27,6 +28,7 @@ type QER struct {
 	QFI    uint8
 	PPI    uint8
 	PDRIDs []uint16
+	SEID   *uint64
 }
 
 func DecodeQER(b []byte) (*QER, error) {
@@ -68,6 +70,9 @@ func DecodeQER(b []byte) (*QER, error) {
 				qer.PDRIDs = append(qer.PDRIDs, v)
 				d = d[2:]
 			}
+		case QER_SEID:
+			v := native.Uint64(b[n:])
+			qer.SEID = &v
 		}
 		b = b[hdr.Len.Align():]
 	}

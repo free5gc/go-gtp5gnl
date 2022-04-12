@@ -120,13 +120,13 @@ func ParseFAROptions(args []string) ([]nl.Attr, error) {
 	return attrs, nil
 }
 
-// add far <ifname> <id> [options...]
+// add far <ifname> <oid> [options...]
 func CmdAddFAR(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -158,16 +158,16 @@ func CmdAddFAR(args []string) error {
 		return err
 	}
 
-	return gtp5gnl.CreateFAR(c, link, id, attrs)
+	return gtp5gnl.CreateFAROID(c, link, oid, attrs)
 }
 
-// mod far <ifname> <id> [options...]
+// mod far <ifname> <oid> [options...]
 func CmdModFAR(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -199,16 +199,16 @@ func CmdModFAR(args []string) error {
 		return err
 	}
 
-	return gtp5gnl.UpdateFAR(c, link, id, attrs)
+	return gtp5gnl.UpdateFAROID(c, link, oid, attrs)
 }
 
-// delete far <ifname> <id>
+// delete far <ifname> <oid>
 func CmdDeleteFAR(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -236,16 +236,16 @@ func CmdDeleteFAR(args []string) error {
 		return err
 	}
 
-	return gtp5gnl.RemoveFAR(c, link, id)
+	return gtp5gnl.RemoveFAROID(c, link, oid)
 }
 
-// get far <ifname> <id>
+// get far <ifname> <oid>
 func CmdGetFAR(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -273,7 +273,7 @@ func CmdGetFAR(args []string) error {
 		return err
 	}
 
-	far, err := gtp5gnl.GetFAR(c, link, id)
+	far, err := gtp5gnl.GetFAROID(c, link, oid)
 	if err != nil {
 		return err
 	}

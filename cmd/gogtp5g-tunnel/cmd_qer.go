@@ -194,13 +194,13 @@ func ParseQEROptions(args []string) ([]nl.Attr, error) {
 	return attrs, nil
 }
 
-// add qer <ifname> <id> [options...]
+// add qer <ifname> <oid> [options...]
 func CmdAddQER(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -232,16 +232,16 @@ func CmdAddQER(args []string) error {
 		return err
 	}
 
-	return gtp5gnl.CreateQER(c, link, id, attrs)
+	return gtp5gnl.CreateQEROID(c, link, oid, attrs)
 }
 
-// mod qer <ifname> <id> [options...]
+// mod qer <ifname> <oid> [options...]
 func CmdModQER(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -273,16 +273,16 @@ func CmdModQER(args []string) error {
 		return err
 	}
 
-	return gtp5gnl.UpdateQER(c, link, id, attrs)
+	return gtp5gnl.UpdateQEROID(c, link, oid, attrs)
 }
 
-// delete far <ifname> <id>
+// delete far <ifname> <oid>
 func CmdDeleteQER(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -310,16 +310,16 @@ func CmdDeleteQER(args []string) error {
 		return err
 	}
 
-	return gtp5gnl.RemoveQER(c, link, id)
+	return gtp5gnl.RemoveQEROID(c, link, oid)
 }
 
-// get qer <ifname> <id>
+// get qer <ifname> <oid>
 func CmdGetQER(args []string) error {
 	if len(args) < 2 {
 		return errors.New("too few parameter")
 	}
 	ifname := args[0]
-	id, err := strconv.Atoi(args[1])
+	oid, err := ParseOID(args[1])
 	if err != nil {
 		return err
 	}
@@ -347,7 +347,7 @@ func CmdGetQER(args []string) error {
 		return err
 	}
 
-	qer, err := gtp5gnl.GetQER(c, link, id)
+	qer, err := gtp5gnl.GetQEROID(c, link, oid)
 	if err != nil {
 		return err
 	}

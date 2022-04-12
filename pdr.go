@@ -1,6 +1,7 @@
 package gtp5gnl
 
 import (
+	"fmt"
 	"syscall"
 
 	"github.com/khirono/go-genl"
@@ -23,12 +24,20 @@ import (
 //     }
 //   }
 func CreatePDR(c *Client, link *Link, pdrid int, attrs []nl.Attr) error {
+	return CreatePDROID(c, link, OID{uint64(pdrid)}, attrs)
+}
+
+func CreatePDROID(c *Client, link *Link, oid OID, attrs []nl.Attr) error {
 	flags := syscall.NLM_F_EXCL
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
 	err := req.Append(genl.Header{Cmd: CMD_ADD_PDR})
 	if err != nil {
 		return err
+	}
+	pdrid, ok := oid.ID()
+	if !ok {
+		return fmt.Errorf("invalid oid: %v", oid)
 	}
 	err = req.Append(&nl.AttrList{
 		{
@@ -42,6 +51,16 @@ func CreatePDR(c *Client, link *Link, pdrid int, attrs []nl.Attr) error {
 	})
 	if err != nil {
 		return err
+	}
+	seid, ok := oid.SEID()
+	if ok {
+		err = req.Append(&nl.Attr{
+			Type:  PDR_SEID,
+			Value: nl.AttrU64(seid),
+		})
+		if err != nil {
+			return err
+		}
 	}
 	err = req.Append(nl.AttrList(attrs))
 	if err != nil {
@@ -52,12 +71,20 @@ func CreatePDR(c *Client, link *Link, pdrid int, attrs []nl.Attr) error {
 }
 
 func UpdatePDR(c *Client, link *Link, pdrid int, attrs []nl.Attr) error {
+	return UpdatePDROID(c, link, OID{uint64(pdrid)}, attrs)
+}
+
+func UpdatePDROID(c *Client, link *Link, oid OID, attrs []nl.Attr) error {
 	flags := syscall.NLM_F_REPLACE
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
 	err := req.Append(genl.Header{Cmd: CMD_ADD_PDR})
 	if err != nil {
 		return err
+	}
+	pdrid, ok := oid.ID()
+	if !ok {
+		return fmt.Errorf("invalid oid: %v", oid)
 	}
 	err = req.Append(&nl.AttrList{
 		{
@@ -71,6 +98,16 @@ func UpdatePDR(c *Client, link *Link, pdrid int, attrs []nl.Attr) error {
 	})
 	if err != nil {
 		return err
+	}
+	seid, ok := oid.SEID()
+	if ok {
+		err = req.Append(&nl.Attr{
+			Type:  PDR_SEID,
+			Value: nl.AttrU64(seid),
+		})
+		if err != nil {
+			return err
+		}
 	}
 	err = req.Append(nl.AttrList(attrs))
 	if err != nil {
@@ -81,6 +118,10 @@ func UpdatePDR(c *Client, link *Link, pdrid int, attrs []nl.Attr) error {
 }
 
 func RemovePDR(c *Client, link *Link, pdrid int) error {
+	return RemovePDROID(c, link, OID{uint64(pdrid)})
+}
+
+func RemovePDROID(c *Client, link *Link, oid OID) error {
 	flags := syscall.NLM_F_EXCL
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
@@ -88,6 +129,10 @@ func RemovePDR(c *Client, link *Link, pdrid int) error {
 	if err != nil {
 		return err
 	}
+	pdrid, ok := oid.ID()
+	if !ok {
+		return fmt.Errorf("invalid oid: %v", oid)
+	}
 	err = req.Append(&nl.AttrList{
 		{
 			Type:  LINK,
@@ -101,16 +146,34 @@ func RemovePDR(c *Client, link *Link, pdrid int) error {
 	if err != nil {
 		return err
 	}
+	seid, ok := oid.SEID()
+	if ok {
+		err = req.Append(&nl.Attr{
+			Type:  PDR_SEID,
+			Value: nl.AttrU64(seid),
+		})
+		if err != nil {
+			return err
+		}
+	}
 	_, err = c.Do(req)
 	return err
 }
 
 func GetPDR(c *Client, link *Link, pdrid int) (*PDR, error) {
+	return GetPDROID(c, link, OID{uint64(pdrid)})
+}
+
+func GetPDROID(c *Client, link *Link, oid OID) (*PDR, error) {
 	flags := syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
 	err := req.Append(genl.Header{Cmd: CMD_GET_PDR})
 	if err != nil {
 		return nil, err
+	}
+	pdrid, ok := oid.ID()
+	if !ok {
+		return nil, fmt.Errorf("invalid oid: %v", oid)
 	}
 	err = req.Append(&nl.AttrList{
 		{
@@ -124,6 +187,16 @@ func GetPDR(c *Client, link *Link, pdrid int) (*PDR, error) {
 	})
 	if err != nil {
 		return nil, err
+	}
+	seid, ok := oid.SEID()
+	if ok {
+		err = req.Append(&nl.Attr{
+			Type:  PDR_SEID,
+			Value: nl.AttrU64(seid),
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	rsps, err := c.Do(req)
 	if err != nil {

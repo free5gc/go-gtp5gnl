@@ -16,6 +16,7 @@ const (
 	PDR_ROLE_ADDR_IPV4
 	PDR_UNIX_SOCKET_PATH
 	PDR_QER_ID
+	PDR_SEID
 )
 
 type PDR struct {
@@ -25,6 +26,7 @@ type PDR struct {
 	OuterHdrRemoval *uint8
 	FARID           *uint32
 	QERID           *uint32
+	SEID            *uint64
 }
 
 func DecodePDR(b []byte) (*PDR, error) {
@@ -55,6 +57,9 @@ func DecodePDR(b []byte) (*PDR, error) {
 		case PDR_QER_ID:
 			v := native.Uint32(b[n:])
 			pdr.QERID = &v
+		case PDR_SEID:
+			v := native.Uint64(b[n:])
+			pdr.SEID = &v
 		default:
 			log.Printf("unknown type: %v\n", hdr.Type)
 		}

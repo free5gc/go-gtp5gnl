@@ -9,9 +9,14 @@ import (
 
 func usage(prog string) {
 	fmt.Fprintf(os.Stderr, `Usage:
-    %v <add|mod> <pdr|far|qer> <ifname> <id> [<options>...]
-    %v <delete|get> <pdr|far|qer> <ifname> <id>
+    %v <add|mod> <pdr|far|qer> <ifname> <oid> [<options>...]
+    %v <delete|get> <pdr|far|qer> <ifname> <oid>
     %v list <pdr|far|qer>
+
+OID format:
+    <id>
+    or
+    <seid>:<id>
 
 PDR Options:
     --pcd <precedence>
