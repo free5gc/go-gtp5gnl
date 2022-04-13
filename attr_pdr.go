@@ -217,8 +217,8 @@ type FlowDesc struct {
 	Proto    uint8
 	Src      net.IPNet
 	Dst      net.IPNet
-	SrcPorts []uint32
-	DstPorts []uint32
+	SrcPorts [][]uint16
+	DstPorts [][]uint16
 }
 
 func DecodeFlowDesc(b []byte) (FlowDesc, error) {
@@ -248,11 +248,29 @@ func DecodeFlowDesc(b []byte) (FlowDesc, error) {
 			fd.Dst.Mask = make([]byte, 4)
 			copy(fd.Dst.Mask, b[n:n+4])
 		case FLOW_DESCRIPTION_SRC_PORT:
-			v := native.Uint32(b[n:])
-			fd.SrcPorts = append(fd.SrcPorts, v)
+			for n < int(hdr.Len) {
+				v := native.Uint32(b[n:])
+				lb := uint16(v >> 16)
+				ub := uint16(v)
+				x := []uint16{lb}
+				if ub != lb {
+					x = append(x, ub)
+				}
+				fd.SrcPorts = append(fd.SrcPorts, x)
+				n += 4
+			}
 		case FLOW_DESCRIPTION_DEST_PORT:
-			v := native.Uint32(b[n:])
-			fd.DstPorts = append(fd.DstPorts, v)
+			for n < int(hdr.Len) {
+				v := native.Uint32(b[n:])
+				lb := uint16(v >> 16)
+				ub := uint16(v)
+				x := []uint16{lb}
+				if ub != lb {
+					x = append(x, ub)
+				}
+				fd.DstPorts = append(fd.DstPorts, x)
+				n += 4
+			}
 		default:
 			log.Printf("unknown type: %v\n", hdr.Type)
 		}

@@ -5,6 +5,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"unsafe"
 
 	"github.com/khirono/go-gtp5gnl"
 	"github.com/khirono/go-nl"
@@ -112,12 +113,11 @@ func ParseFlowDesc(s string) (nl.AttrList, error) {
 	}
 	sports, err := ParseFlowDescPorts(token[pos])
 	if err == nil {
-		for _, p := range sports {
-			attrs = append(attrs, nl.Attr{
-				Type:  gtp5gnl.FLOW_DESCRIPTION_SRC_PORT,
-				Value: nl.AttrU32(p),
-			})
-		}
+		b := EncodePorts(sports)
+		attrs = append(attrs, nl.Attr{
+			Type:  gtp5gnl.FLOW_DESCRIPTION_SRC_PORT,
+			Value: nl.AttrBytes(b),
+		})
 		pos++
 	}
 
@@ -149,12 +149,11 @@ func ParseFlowDesc(s string) (nl.AttrList, error) {
 	if pos < len(token) {
 		dports, err := ParseFlowDescPorts(token[pos])
 		if err == nil {
-			for _, p := range dports {
-				attrs = append(attrs, nl.Attr{
-					Type:  gtp5gnl.FLOW_DESCRIPTION_DEST_PORT,
-					Value: nl.AttrU32(p),
-				})
-			}
+			b := EncodePorts(dports)
+			attrs = append(attrs, nl.Attr{
+				Type:  gtp5gnl.FLOW_DESCRIPTION_DEST_PORT,
+				Value: nl.AttrBytes(b),
+			})
 		}
 	}
 
@@ -187,32 +186,46 @@ func ParseFlowDescIPNet(s string) (*net.IPNet, error) {
 	}, nil
 }
 
-func ParseFlowDescPorts(s string) ([]uint32, error) {
-	var vals []uint32
+func ParseFlowDescPorts(s string) ([][]uint16, error) {
+	var vals [][]uint16
 	for _, port := range strings.Split(s, ",") {
 		digit := strings.SplitN(port, "-", 2)
 		switch len(digit) {
 		case 1:
-			v, err := strconv.ParseUint(digit[0], 10, 32)
+			v, err := strconv.ParseUint(digit[0], 10, 16)
 			if err != nil {
 				return nil, err
 			}
-			vals = append(vals, uint32(v))
+			vals = append(vals, []uint16{uint16(v)})
 		case 2:
-			start, err := strconv.ParseUint(digit[0], 10, 32)
+			start, err := strconv.ParseUint(digit[0], 10, 16)
 			if err != nil {
 				return nil, err
 			}
-			end, err := strconv.ParseUint(digit[1], 10, 32)
+			end, err := strconv.ParseUint(digit[1], 10, 16)
 			if err != nil {
 				return nil, err
 			}
-			for v := start; v <= end; v++ {
-				vals = append(vals, uint32(v))
-			}
+			vals = append(vals, []uint16{uint16(start), uint16(end)})
 		default:
 			return nil, fmt.Errorf("invalid port: %q", port)
 		}
 	}
 	return vals, nil
+}
+
+func EncodePorts(ports [][]uint16) []byte {
+	b := make([]byte, len(ports)*4)
+	off := 0
+	for _, p := range ports {
+		x := (*uint32)(unsafe.Pointer(&b[off]))
+		switch len(p) {
+		case 1:
+			*x = uint32(p[0])<<16 | uint32(p[0])
+		case 2:
+			*x = uint32(p[0])<<16 | uint32(p[1])
+		}
+		off += 4
+	}
+	return b
 }
