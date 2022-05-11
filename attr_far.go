@@ -12,6 +12,7 @@ const (
 	FAR_FORWARDING_PARAMETER
 	FAR_RELATED_TO_PDR
 	FAR_SEID
+	FAR_BAR_ID
 )
 
 type FAR struct {
@@ -19,6 +20,7 @@ type FAR struct {
 	Action uint8
 	Param  *ForwardParam
 	PDRIDs []uint16
+	BARID  *uint8
 	SEID   *uint64
 }
 
@@ -47,6 +49,9 @@ func DecodeFAR(b []byte) (*FAR, error) {
 				far.PDRIDs = append(far.PDRIDs, v)
 				d = d[2:]
 			}
+		case FAR_BAR_ID:
+			v := b[n]
+			far.BARID = &v
 		case FAR_SEID:
 			v := native.Uint64(b[n:])
 			far.SEID = &v

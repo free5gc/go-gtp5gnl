@@ -17,6 +17,7 @@ const (
 	PDR_UNIX_SOCKET_PATH
 	PDR_QER_ID
 	PDR_SEID
+	PDR_URR_ID
 )
 
 type PDR struct {
@@ -26,6 +27,7 @@ type PDR struct {
 	OuterHdrRemoval *uint8
 	FARID           *uint32
 	QERID           *uint32
+	URRID           *uint32
 	SEID            *uint64
 }
 
@@ -57,6 +59,9 @@ func DecodePDR(b []byte) (*PDR, error) {
 		case PDR_QER_ID:
 			v := native.Uint32(b[n:])
 			pdr.QERID = &v
+		case PDR_URR_ID:
+			v := native.Uint32(b[n:])
+			pdr.URRID = &v
 		case PDR_SEID:
 			v := native.Uint64(b[n:])
 			pdr.SEID = &v
