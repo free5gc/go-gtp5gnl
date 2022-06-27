@@ -62,6 +62,10 @@ func TestCreateFAR(t *testing.T) {
 						},
 					},
 				},
+				{
+					Type:  FORWARDING_PARAMETER_PFCPSM_REQ_FLAGS,
+					Value: nl.AttrU8(2),
+				},
 			},
 		},
 	}
