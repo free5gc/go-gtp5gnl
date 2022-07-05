@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/khirono/go-gtp5gnl"
+	"github.com/free5gc/go-gtp5gnl"
 	"github.com/khirono/go-nl"
 )
 

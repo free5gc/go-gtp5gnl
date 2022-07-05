@@ -1,4 +1,4 @@
-module github.com/khirono/go-gtp5gnl
+module github.com/free5gc/go-gtp5gnl
 
 go 1.16
 
