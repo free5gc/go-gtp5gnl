@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/khirono/go-gtp5gnl"
+	"github.com/free5gc/go-gtp5gnl"
 )
 
 func TestParseOID(t *testing.T) {
