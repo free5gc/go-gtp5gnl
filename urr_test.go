@@ -54,6 +54,48 @@ func TestCreateURR(t *testing.T) {
 			Type:  URR_SEQ,
 			Value: nl.AttrU64(6),
 		},
+		{
+			Type: URR_VOLUME_THRESHOLD,
+			Value: nl.AttrList{
+				{
+					Type:  URR_VOLUME_THRESHOLD_FLAG,
+					Value: nl.AttrU8(7),
+				},
+				{
+					Type:  URR_VOLUME_THRESHOLD_TOVOL,
+					Value: nl.AttrU64(1024),
+				},
+				{
+					Type:  URR_VOLUME_THRESHOLD_UVOL,
+					Value: nl.AttrU64(2048),
+				},
+				{
+					Type:  URR_VOLUME_THRESHOLD_DVOL,
+					Value: nl.AttrU64(4096),
+				},
+			},
+		},
+		{
+			Type: URR_VOLUME_QUOTA,
+			Value: nl.AttrList{
+				{
+					Type:  URR_VOLUME_QUOTA_FLAG,
+					Value: nl.AttrU8(7),
+				},
+				{
+					Type:  URR_VOLUME_QUOTA_TOVOL,
+					Value: nl.AttrU64(1024),
+				},
+				{
+					Type:  URR_VOLUME_QUOTA_UVOL,
+					Value: nl.AttrU64(2048),
+				},
+				{
+					Type:  URR_VOLUME_QUOTA_DVOL,
+					Value: nl.AttrU64(4096),
+				},
+			},
+		},
 	}
 
 	err = CreateURR(c, link, 1, attrs)

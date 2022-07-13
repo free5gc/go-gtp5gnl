@@ -230,6 +230,16 @@ func ParsePDROptions(args []string) ([]nl.Attr, error) {
 				Type:  gtp5gnl.PDR_UNIX_SOCKET_PATH,
 				Value: nl.AttrString(arg),
 			})
+		case "--report-usock-path":
+			// --buffer-usock-path <AF_UNIX-sock-path>
+			arg, ok := p.GetToken()
+			if !ok {
+				return attrs, fmt.Errorf("option requires argument %q", opt)
+			}
+			attrs = append(attrs, nl.Attr{
+				Type:  gtp5gnl.PDR_REPORT_UNIX_SOCKET_PATH,
+				Value: nl.AttrString(arg),
+			})
 		default:
 			return attrs, fmt.Errorf("unknown option %q", opt)
 		}
