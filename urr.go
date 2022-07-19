@@ -21,7 +21,6 @@ func CreateURR(c *Client, link *Link, urrid int, attrs []nl.Attr) error {
 }
 
 func CreateURROID(c *Client, link *Link, oid OID, attrs []nl.Attr) error {
-	fmt.Printf("CreateURROID\n")
 	flags := syscall.NLM_F_EXCL
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
@@ -69,8 +68,6 @@ func UpdateURR(c *Client, link *Link, urrid int, attrs []nl.Attr) error {
 }
 
 func UpdateURROID(c *Client, link *Link, oid OID, attrs []nl.Attr) error {
-	fmt.Printf("UpdateURROID\n")
-
 	flags := syscall.NLM_F_REPLACE
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
