@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"syscall"
 
 	"github.com/free5gc/go-gtp5gnl"
@@ -209,12 +210,20 @@ func CmdAddQER(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -250,12 +259,20 @@ func CmdModQER(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -287,12 +304,20 @@ func CmdDeleteQER(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -324,12 +349,20 @@ func CmdGetQER(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -362,12 +395,20 @@ func CmdGetQER(args []string) error {
 
 // list qer
 func CmdListQER(args []string) error {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
