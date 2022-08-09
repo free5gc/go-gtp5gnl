@@ -19,7 +19,7 @@ func GetVersion(c *Client) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if len(rsps) < 1 {
+	if len(rsps) != 1 {
 		return "", err
 	}
 	ver, err := DecodeVersion(rsps[0].Body[genl.SizeofHeader:])
