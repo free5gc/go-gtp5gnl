@@ -110,21 +110,21 @@ func UpdateURROID(c *Client, link *Link, oid OID, attrs []nl.Attr) error {
 	return err
 }
 
-func RemoveURR(c *Client, link *Link, urrid int) error {
+func RemoveURR(c *Client, link *Link, urrid int) (*USAReport, error) {
 	return RemoveURROID(c, link, OID{uint64(urrid)})
 }
 
-func RemoveURROID(c *Client, link *Link, oid OID) error {
+func RemoveURROID(c *Client, link *Link, oid OID) (*USAReport, error) {
 	flags := syscall.NLM_F_EXCL
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
 	err := req.Append(genl.Header{Cmd: CMD_DEL_URR})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	urrid, ok := oid.ID()
 	if !ok {
-		return fmt.Errorf("invalid oid: %v", oid)
+		return nil, fmt.Errorf("invalid oid: %v", oid)
 	}
 	err = req.Append(nl.AttrList{
 		{
@@ -137,7 +137,7 @@ func RemoveURROID(c *Client, link *Link, oid OID) error {
 		},
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	seid, ok := oid.SEID()
 	if ok {
@@ -146,11 +146,21 @@ func RemoveURROID(c *Client, link *Link, oid OID) error {
 			Value: nl.AttrU64(seid),
 		})
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	_, err = c.Do(req)
-	return err
+	rsps, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if len(rsps) < 1 {
+		return nil, err
+	}
+	report, err := DecodeReport(rsps[0].Body[genl.SizeofHeader:])
+	if err != nil {
+		return nil, err
+	}
+	return report, err
 }
 
 func GetURR(c *Client, link *Link, urrid int) (*URR, error) {

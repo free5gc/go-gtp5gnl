@@ -3,6 +3,7 @@ package gtp5gnl
 import (
 	"encoding/json"
 	"log"
+	"sync"
 	"syscall"
 	"testing"
 
@@ -10,12 +11,20 @@ import (
 )
 
 func TestCreatePDR(t *testing.T) {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -81,12 +90,20 @@ func TestCreatePDR(t *testing.T) {
 }
 
 func TestGetPDR(t *testing.T) {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -117,12 +134,20 @@ func TestGetPDR(t *testing.T) {
 }
 
 func TestGetPDRAll(t *testing.T) {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -148,12 +173,20 @@ func TestGetPDRAll(t *testing.T) {
 }
 
 func TestRemovePDR(t *testing.T) {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {

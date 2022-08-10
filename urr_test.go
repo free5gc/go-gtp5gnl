@@ -3,6 +3,7 @@ package gtp5gnl
 import (
 	"encoding/json"
 	"log"
+	"sync"
 	"syscall"
 	"testing"
 
@@ -10,12 +11,20 @@ import (
 )
 
 func TestCreateURR(t *testing.T) {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -105,12 +114,20 @@ func TestCreateURR(t *testing.T) {
 }
 
 func TestGetURR(t *testing.T) {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -141,12 +158,20 @@ func TestGetURR(t *testing.T) {
 }
 
 func TestGetURRAll(t *testing.T) {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -172,12 +197,20 @@ func TestGetURRAll(t *testing.T) {
 }
 
 func TestRemoveURR(t *testing.T) {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {

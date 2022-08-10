@@ -2,6 +2,7 @@ package gtp5gnl
 
 import (
 	"net"
+	"sync"
 	"syscall"
 	"testing"
 
@@ -10,18 +11,26 @@ import (
 )
 
 func TestCreateLink(t *testing.T) {
+	var wg sync.WaitGroup
+	mux, err := nl.NewMux()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
+
 	conn, err := nl.Open(syscall.NETLINK_ROUTE)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer conn.Close()
-
-	mux, err := nl.NewMux()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer mux.Close()
-	go mux.Serve()
 
 	c := nl.NewClient(conn, mux)
 
@@ -74,18 +83,26 @@ func TestCreateLink(t *testing.T) {
 }
 
 func TestRemoveLink(t *testing.T) {
+	var wg sync.WaitGroup
+	mux, err := nl.NewMux()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
+
 	conn, err := nl.Open(syscall.NETLINK_ROUTE)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer conn.Close()
-
-	mux, err := nl.NewMux()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer mux.Close()
-	go mux.Serve()
 
 	c := nl.NewClient(conn, mux)
 

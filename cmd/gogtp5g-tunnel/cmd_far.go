@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"sync"
 	"syscall"
 
 	"github.com/free5gc/go-gtp5gnl"
@@ -135,12 +136,20 @@ func CmdAddFAR(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -176,12 +185,20 @@ func CmdModFAR(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -213,12 +230,20 @@ func CmdDeleteFAR(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -250,12 +275,20 @@ func CmdGetFAR(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -288,12 +321,20 @@ func CmdGetFAR(args []string) error {
 
 // list far
 func CmdListFAR(args []string) error {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
