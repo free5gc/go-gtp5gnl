@@ -110,11 +110,11 @@ func UpdateURROID(c *Client, link *Link, oid OID, attrs []nl.Attr) error {
 	return err
 }
 
-func RemoveURR(c *Client, link *Link, urrid int) (*USAReport, error) {
+func RemoveURR(c *Client, link *Link, urrid int) ([]USAReport, error) {
 	return RemoveURROID(c, link, OID{uint64(urrid)})
 }
 
-func RemoveURROID(c *Client, link *Link, oid OID) (*USAReport, error) {
+func RemoveURROID(c *Client, link *Link, oid OID) ([]USAReport, error) {
 	flags := syscall.NLM_F_EXCL
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)

@@ -228,8 +228,10 @@ func TestRemoveURR(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = RemoveURR(c, link, 1)
+	r, err := RemoveURR(c, link, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	log.Printf("Report: %+v\n", r)
 }

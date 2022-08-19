@@ -100,8 +100,8 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 	return VolMeasurement, nil
 }
 
-func DecodeReport(b []byte) (*USAReport, error) {
-	report := new(USAReport)
+func DecodeReport(b []byte) ([]USAReport, error) {
+	var report USAReport
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
 		if err != nil {
@@ -117,11 +117,11 @@ func DecodeReport(b []byte) (*USAReport, error) {
 		case UR_VOLUME_MEASUREMENT:
 			volMeasurement, err := DecodeVolumeMeasurement(b[n:])
 			if err != nil {
-				return report, err
+				return []USAReport{report}, err
 			}
 			report.VolMeasurement = volMeasurement
 		}
 		b = b[hdr.Len.Align():]
 	}
-	return report, nil
+	return []USAReport{report}, nil
 }
