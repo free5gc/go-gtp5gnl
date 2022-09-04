@@ -1,6 +1,8 @@
 package gtp5gnl
 
 import (
+	"time"
+
 	"github.com/khirono/go-nl"
 )
 
@@ -10,6 +12,8 @@ const (
 	UR_URSEQN
 	UR_VOLUME_MEASUREMENT
 	UR_QUERY_URR_REFERENCE
+	UR_START_TIME
+	UR_END_TIME
 )
 const (
 	UR_VOLUME_MEASUREMENT_FLAGS = iota + 1
@@ -38,6 +42,8 @@ type USAReport struct {
 	USARTrigger    uint32
 	VolMeasurement VolumeMeasurement
 	QueryUrrRef    uint32
+	StartTime      time.Time
+	EndTime        time.Time
 }
 type VolumeMeasurement struct {
 	Flag           uint8
@@ -132,6 +138,12 @@ func DecodeReport(b []byte) ([]USAReport, error) {
 				return []USAReport{report}, err
 			}
 			report.VolMeasurement = volMeasurement
+		case UR_START_TIME:
+			v := native.Uint64(b[n:])
+			report.StartTime = time.Unix(0, int64(v))
+		case UR_END_TIME:
+			v := native.Uint64(b[n:])
+			report.EndTime = time.Unix(0, int64(v))
 		}
 		b = b[hdr.Len.Align():]
 	}
