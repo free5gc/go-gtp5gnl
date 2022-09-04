@@ -23,6 +23,15 @@ const (
 	UR_VOLUME_MEASUREMENT_DPACKET
 )
 
+const (
+	TOVOL uint8 = 1 << iota
+	ULVOL
+	DLVOL
+	TONOP
+	ULNOP
+	DLNOP
+)
+
 type USAReport struct {
 	URRID          uint32
 	URSEQN         uint32
@@ -72,27 +81,30 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 			return VolMeasurement, err
 		}
 		switch hdr.MaskedType() {
-		case UR_VOLUME_MEASUREMENT_FLAGS:
-			v := uint8(b[n])
-			VolMeasurement.Flag = v
 		case UR_VOLUME_MEASUREMENT_TOVOL:
 			v := native.Uint64(b[n:])
 			VolMeasurement.TotalVolume = v
+			VolMeasurement.Flag |= TOVOL
 		case UR_VOLUME_MEASUREMENT_UVOL:
 			v := native.Uint64(b[n:])
 			VolMeasurement.UplinkVolume = v
+			VolMeasurement.Flag |= ULVOL
 		case UR_VOLUME_MEASUREMENT_DVOL:
 			v := native.Uint64(b[n:])
 			VolMeasurement.DownlinkVolume = v
+			VolMeasurement.Flag |= DLVOL
 		case UR_VOLUME_MEASUREMENT_TOPACKET:
 			v := native.Uint64(b[n:])
 			VolMeasurement.TotalPktNum = v
+			VolMeasurement.Flag |= TONOP
 		case UR_VOLUME_MEASUREMENT_UPACKET:
 			v := native.Uint64(b[n:])
 			VolMeasurement.UplinkPktNum = v
+			VolMeasurement.Flag |= ULNOP
 		case UR_VOLUME_MEASUREMENT_DPACKET:
 			v := native.Uint64(b[n:])
 			VolMeasurement.DownlinkPktNum = v
+			VolMeasurement.Flag |= DLNOP
 		}
 
 		b = b[hdr.Len.Align():]
