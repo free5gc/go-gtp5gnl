@@ -81,6 +81,7 @@ type UsageReportTrigger struct {
 
 func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 	var VolMeasurement VolumeMeasurement
+
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
 		if err != nil {
@@ -118,8 +119,9 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 	return VolMeasurement, nil
 }
 
-func DecodeReport(b []byte) ([]USAReport, error) {
-	var report USAReport
+func DecodeUSAReport(b []byte) (*USAReport, error) {
+	report := new(USAReport)
+
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
 		if err != nil {
@@ -135,7 +137,7 @@ func DecodeReport(b []byte) ([]USAReport, error) {
 		case UR_VOLUME_MEASUREMENT:
 			volMeasurement, err := DecodeVolumeMeasurement(b[n:])
 			if err != nil {
-				return []USAReport{report}, err
+				return nil, err
 			}
 			report.VolMeasurement = volMeasurement
 		case UR_START_TIME:
@@ -147,5 +149,5 @@ func DecodeReport(b []byte) ([]USAReport, error) {
 		}
 		b = b[hdr.Len.Align():]
 	}
-	return []USAReport{report}, nil
+	return report, nil
 }
