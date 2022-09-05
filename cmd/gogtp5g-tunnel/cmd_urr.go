@@ -36,7 +36,7 @@ func CmdAddURR(args []string) error {
 	if err != nil {
 		return err
 	}
-	attrs, err := ParseQEROptions(args[2:])
+	attrs, err := ParseURROptions(args[2:])
 	if err != nil {
 		return err
 	}
@@ -68,81 +68,81 @@ func CmdAddURR(args []string) error {
 }
 
 // mod urr <ifname> <oid> [options...]
-func CmdModURR(args []string) error {
+func CmdModURR(args []string) ([]gtp5gnl.USAReport, error) {
 	if len(args) < 2 {
-		return errors.New("too few parameter")
+		return nil, errors.New("too few parameter")
 	}
 	ifname := args[0]
 	oid, err := ParseOID(args[1])
 	if err != nil {
-		return err
+		return nil, err
 	}
-	attrs, err := ParseQEROptions(args[2:])
+	attrs, err := ParseURROptions(args[2:])
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	mux, err := nl.NewMux()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer mux.Close()
 	go mux.Serve()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer conn.Close()
 
 	c, err := gtp5gnl.NewClient(conn, mux)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	link, err := gtp5gnl.GetLink(ifname)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return gtp5gnl.UpdateQEROID(c, link, oid, attrs)
+	return gtp5gnl.UpdateURROID(c, link, oid, attrs)
 }
 
 // delete urr <ifname> <oid>
-func CmdDeleteURR(args []string) error {
+func CmdDeleteURR(args []string) ([]gtp5gnl.USAReport, error) {
 	if len(args) < 2 {
-		return errors.New("too few parameter")
+		return nil, errors.New("too few parameter")
 	}
 	ifname := args[0]
 	oid, err := ParseOID(args[1])
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	mux, err := nl.NewMux()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer mux.Close()
 	go mux.Serve()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer conn.Close()
 
 	c, err := gtp5gnl.NewClient(conn, mux)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	link, err := gtp5gnl.GetLink(ifname)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return gtp5gnl.RemoveQEROID(c, link, oid)
+	return gtp5gnl.RemoveURROID(c, link, oid)
 }
 
 // get urr <ifname> <oid>
@@ -179,12 +179,12 @@ func CmdGetURR(args []string) error {
 		return err
 	}
 
-	qer, err := gtp5gnl.GetQEROID(c, link, oid)
+	urr, err := gtp5gnl.GetURROID(c, link, oid)
 	if err != nil {
 		return err
 	}
 
-	j, err := json.MarshalIndent(qer, "", "  ")
+	j, err := json.MarshalIndent(urr, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -212,12 +212,12 @@ func CmdListURR(args []string) error {
 		return err
 	}
 
-	qers, err := gtp5gnl.GetQERAll(c)
+	urrs, err := gtp5gnl.GetURRAll(c)
 	if err != nil {
 		return err
 	}
 
-	j, err := json.MarshalIndent(qers, "", "  ")
+	j, err := json.MarshalIndent(urrs, "", "  ")
 	if err != nil {
 		return err
 	}
