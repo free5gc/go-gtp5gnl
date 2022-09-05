@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"syscall"
 
 	"github.com/free5gc/go-gtp5gnl"
@@ -41,12 +42,20 @@ func CmdAddURR(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -82,12 +91,20 @@ func CmdModURR(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -123,12 +140,20 @@ func CmdDeleteURR(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -164,12 +189,20 @@ func CmdGetURR(args []string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
@@ -202,12 +235,20 @@ func CmdGetURR(args []string) error {
 
 // list urr
 func CmdListURR(args []string) error {
+	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
 		return err
 	}
-	defer mux.Close()
-	go mux.Serve()
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
