@@ -23,4 +23,5 @@ const (
 	CMD_GET_BAR
 
 	CMD_GET_VERSION
+	CMD_GET_REPORT
 )

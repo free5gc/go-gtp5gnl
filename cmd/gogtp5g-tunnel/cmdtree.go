@@ -16,6 +16,10 @@ var CmdTree = CmdNodeList{
 				Name: "qer",
 				Next: CmdFunc(CmdAddQER),
 			},
+			CmdToken{
+				Name: "urr",
+				Next: CmdFunc(CmdAddURR),
+			},
 		},
 	},
 	CmdToken{
@@ -32,6 +36,10 @@ var CmdTree = CmdNodeList{
 			CmdToken{
 				Name: "qer",
 				Next: CmdFunc(CmdModQER),
+			},
+			CmdToken{
+				Name: "urr",
+				Next: CmdFunc(CmdModURR),
 			},
 		},
 	},
@@ -50,6 +58,10 @@ var CmdTree = CmdNodeList{
 				Name: "qer",
 				Next: CmdFunc(CmdDeleteQER),
 			},
+			CmdToken{
+				Name: "urr",
+				Next: CmdFunc(CmdDeleteURR),
+			},
 		},
 	},
 	CmdToken{
@@ -67,6 +79,10 @@ var CmdTree = CmdNodeList{
 				Name: "qer",
 				Next: CmdFunc(CmdGetQER),
 			},
+			CmdToken{
+				Name: "urr",
+				Next: CmdFunc(CmdGetURR),
+			},
 		},
 	},
 	CmdToken{
@@ -83,6 +99,10 @@ var CmdTree = CmdNodeList{
 			CmdToken{
 				Name: "qer",
 				Next: CmdFunc(CmdListQER),
+			},
+			CmdToken{
+				Name: "urr",
+				Next: CmdFunc(CmdListURR),
 			},
 		},
 	},
