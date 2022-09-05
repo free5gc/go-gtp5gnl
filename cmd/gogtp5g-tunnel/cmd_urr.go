@@ -68,81 +68,89 @@ func CmdAddURR(args []string) error {
 }
 
 // mod urr <ifname> <oid> [options...]
-func CmdModURR(args []string) ([]gtp5gnl.USAReport, error) {
+func CmdModURR(args []string) error {
 	if len(args) < 2 {
-		return nil, errors.New("too few parameter")
+		return errors.New("too few parameter")
 	}
 	ifname := args[0]
 	oid, err := ParseOID(args[1])
 	if err != nil {
-		return nil, err
+		return err
 	}
 	attrs, err := ParseURROptions(args[2:])
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	mux, err := nl.NewMux()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer mux.Close()
 	go mux.Serve()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer conn.Close()
 
 	c, err := gtp5gnl.NewClient(conn, mux)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	link, err := gtp5gnl.GetLink(ifname)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return gtp5gnl.UpdateURROID(c, link, oid, attrs)
+	USAReports, err := gtp5gnl.UpdateURROID(c, link, oid, attrs)
+
+	fmt.Printf("Reports: %+v\n", USAReports)
+
+	return err
 }
 
 // delete urr <ifname> <oid>
-func CmdDeleteURR(args []string) ([]gtp5gnl.USAReport, error) {
+func CmdDeleteURR(args []string) error {
 	if len(args) < 2 {
-		return nil, errors.New("too few parameter")
+		return errors.New("too few parameter")
 	}
 	ifname := args[0]
 	oid, err := ParseOID(args[1])
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	mux, err := nl.NewMux()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer mux.Close()
 	go mux.Serve()
 
 	conn, err := nl.Open(syscall.NETLINK_GENERIC)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer conn.Close()
 
 	c, err := gtp5gnl.NewClient(conn, mux)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	link, err := gtp5gnl.GetLink(ifname)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return gtp5gnl.RemoveURROID(c, link, oid)
+	USAReports, err := gtp5gnl.RemoveURROID(c, link, oid)
+
+	fmt.Printf("Reports: %+v\n", USAReports)
+
+	return err
 }
 
 // get urr <ifname> <oid>
