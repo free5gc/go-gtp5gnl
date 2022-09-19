@@ -8,11 +8,11 @@ import (
 	"github.com/khirono/go-nl"
 )
 
-func GetReport(c *Client, link *Link, urrid uint64, seid uint64) (*USAReport, error) {
+func GetReport(c *Client, link *Link, urrid uint64, seid uint64) ([]USAReport, error) {
 	return GetReportOID(c, link, OID{uint64(urrid), seid})
 }
 
-func GetReportOID(c *Client, link *Link, oid OID) (*USAReport, error) {
+func GetReportOID(c *Client, link *Link, oid OID) ([]USAReport, error) {
 	flags := syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
 	err := req.Append(genl.Header{Cmd: CMD_GET_REPORT})
@@ -53,9 +53,9 @@ func GetReportOID(c *Client, link *Link, oid OID) (*USAReport, error) {
 	if len(rsps) < 1 {
 		return nil, err
 	}
-	report, err := DecodeUSAReport(rsps[0].Body[genl.SizeofHeader:])
+	reports, err := DecodeUSAReport(rsps[0].Body[genl.SizeofHeader:])
 	if err != nil {
 		return nil, err
 	}
-	return report, err
+	return reports, err
 }

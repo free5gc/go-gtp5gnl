@@ -119,8 +119,11 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 	return VolMeasurement, nil
 }
 
-func DecodeUSAReport(b []byte) (*USAReport, error) {
-	report := new(USAReport)
+func DecodeUSAReport(b []byte) ([]USAReport, error) {
+	var reports []USAReport
+	reportNum := 0
+
+	r := new(USAReport)
 
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
@@ -129,25 +132,34 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 		}
 		switch hdr.MaskedType() {
 		case UR_URRID:
-			report.URRID = native.Uint32(b[n:])
+			if reportNum != 0 {
+				reports = append(reports, *r)
+				r = new(USAReport)
+			}
+
+			r.URRID = native.Uint32(b[n:])
+			reportNum++
 		case UR_USAGE_REPORT_TRIGGER:
-			report.USARTrigger = native.Uint32(b[n:])
+			r.USARTrigger = native.Uint32(b[n:])
 		case UR_URSEQN:
-			report.URSEQN = native.Uint32(b[n:])
+			r.URSEQN = native.Uint32(b[n:])
 		case UR_VOLUME_MEASUREMENT:
 			volMeasurement, err := DecodeVolumeMeasurement(b[n:])
 			if err != nil {
 				return nil, err
 			}
-			report.VolMeasurement = volMeasurement
+			r.VolMeasurement = volMeasurement
 		case UR_START_TIME:
 			v := native.Uint64(b[n:])
-			report.StartTime = time.Unix(0, int64(v))
+			r.StartTime = time.Unix(0, int64(v))
 		case UR_END_TIME:
 			v := native.Uint64(b[n:])
-			report.EndTime = time.Unix(0, int64(v))
+			r.EndTime = time.Unix(0, int64(v))
 		}
 		b = b[hdr.Len.Align():]
 	}
-	return report, nil
+
+	reports = append(reports, *r)
+
+	return reports, nil
 }
