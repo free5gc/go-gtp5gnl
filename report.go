@@ -8,11 +8,11 @@ import (
 	"github.com/khirono/go-nl"
 )
 
-func GetReport(c *Client, link *Link, urrid uint64, seid uint64) (*USAReport, error) {
-	return GetReportOID(c, link, OID{uint64(urrid), seid})
+func GetReport(c *Client, link *Link, urrid uint64, seid uint64, trigger uint16) (*USAReport, error) {
+	return GetReportOID(c, link, OID{uint64(urrid), seid}, trigger)
 }
 
-func GetReportOID(c *Client, link *Link, oid OID) (*USAReport, error) {
+func GetReportOID(c *Client, link *Link, oid OID, trigger uint16) (*USAReport, error) {
 	flags := syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
 	err := req.Append(genl.Header{Cmd: CMD_GET_REPORT})
@@ -31,6 +31,11 @@ func GetReportOID(c *Client, link *Link, oid OID) (*USAReport, error) {
 		{
 			Type:  URR_ID,
 			Value: nl.AttrU32(urrid),
+		},
+
+		{
+			Type:  URR_REPORTING_TRIGGER,
+			Value: nl.AttrU64(trigger),
 		},
 	})
 	if err != nil {
@@ -53,9 +58,14 @@ func GetReportOID(c *Client, link *Link, oid OID) (*USAReport, error) {
 	if len(rsps) < 1 {
 		return nil, err
 	}
-	report, err := DecodeUSAReport(rsps[0].Body[genl.SizeofHeader:])
+	report, err := DecodeAllUSAReports(rsps[0].Body[genl.SizeofHeader:])
+	if len(report) > 1 {
+		return nil, fmt.Errorf("get several reports instead of one")
+	}
+
 	if err != nil {
 		return nil, err
 	}
-	return report, err
+	fmt.Print(report)
+	return &report[0], err
 }

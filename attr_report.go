@@ -7,6 +7,10 @@ import (
 )
 
 const (
+	UR = iota + 5
+)
+
+const (
 	UR_URRID = iota + 3
 	UR_USAGE_REPORT_TRIGGER
 	UR_URSEQN
@@ -117,6 +121,30 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 		b = b[hdr.Len.Align():]
 	}
 	return VolMeasurement, nil
+}
+
+func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
+	var usars []USAReport
+
+	for len(b) > 0 {
+		hdr, n, err := nl.DecodeAttrHdr(b)
+		if err != nil {
+			return nil, err
+		}
+
+		switch hdr.MaskedType() {
+		case UR:
+			r, err := DecodeUSAReport(b[n:])
+			if err != nil {
+				return nil, err
+			}
+			usars = append(usars, *r)
+		}
+
+		b = b[hdr.Len.Align():]
+	}
+
+	return usars, nil
 }
 
 func DecodeUSAReport(b []byte) (*USAReport, error) {

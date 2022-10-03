@@ -120,11 +120,11 @@ func UpdateURROID(c *Client, link *Link, oid OID, attrs []nl.Attr) (*USAReport, 
 	return report, err
 }
 
-func RemoveURR(c *Client, link *Link, urrid int) (*USAReport, error) {
+func RemoveURR(c *Client, link *Link, urrid int) ([]USAReport, error) {
 	return RemoveURROID(c, link, OID{uint64(urrid)})
 }
 
-func RemoveURROID(c *Client, link *Link, oid OID) (*USAReport, error) {
+func RemoveURROID(c *Client, link *Link, oid OID) ([]USAReport, error) {
 	flags := syscall.NLM_F_EXCL
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
@@ -166,11 +166,11 @@ func RemoveURROID(c *Client, link *Link, oid OID) (*USAReport, error) {
 	if len(rsps) < 1 {
 		return nil, err
 	}
-	report, err := DecodeUSAReport(rsps[0].Body[genl.SizeofHeader:])
+	reports, err := DecodeAllUSAReports(rsps[0].Body[genl.SizeofHeader:])
 	if err != nil {
 		return nil, err
 	}
-	return report, err
+	return reports, err
 }
 
 func GetURR(c *Client, link *Link, urrid int) (*URR, error) {
