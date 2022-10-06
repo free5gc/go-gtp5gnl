@@ -66,6 +66,5 @@ func GetReportOID(c *Client, link *Link, oid OID, trigger uint16) (*USAReport, e
 	if err != nil {
 		return nil, err
 	}
-	fmt.Print(report)
 	return &report[0], err
 }
