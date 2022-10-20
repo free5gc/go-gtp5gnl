@@ -11,6 +11,10 @@ import (
 )
 
 func TestCreateURR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -114,6 +118,10 @@ func TestCreateURR(t *testing.T) {
 }
 
 func TestGetURR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -158,6 +166,10 @@ func TestGetURR(t *testing.T) {
 }
 
 func TestGetURRAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -197,6 +209,10 @@ func TestGetURRAll(t *testing.T) {
 }
 
 func TestRemoveURR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
