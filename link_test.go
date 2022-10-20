@@ -11,6 +11,10 @@ import (
 )
 
 func TestCreateLink(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -83,6 +87,10 @@ func TestCreateLink(t *testing.T) {
 }
 
 func TestRemoveLink(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {

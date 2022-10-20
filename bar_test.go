@@ -11,6 +11,10 @@ import (
 )
 
 func TestCreateBAR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -60,6 +64,10 @@ func TestCreateBAR(t *testing.T) {
 }
 
 func TestGetBAR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -104,6 +112,10 @@ func TestGetBAR(t *testing.T) {
 }
 
 func TestGetBARAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -143,6 +155,10 @@ func TestGetBARAll(t *testing.T) {
 }
 
 func TestRemoveBAR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {

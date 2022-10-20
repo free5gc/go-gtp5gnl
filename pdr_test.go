@@ -11,6 +11,10 @@ import (
 )
 
 func TestCreatePDR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -90,6 +94,10 @@ func TestCreatePDR(t *testing.T) {
 }
 
 func TestGetPDR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -134,6 +142,10 @@ func TestGetPDR(t *testing.T) {
 }
 
 func TestGetPDRAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -173,6 +185,10 @@ func TestGetPDRAll(t *testing.T) {
 }
 
 func TestRemovePDR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {

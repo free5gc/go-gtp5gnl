@@ -11,6 +11,10 @@ import (
 )
 
 func TestCreateFAR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -86,6 +90,10 @@ func TestCreateFAR(t *testing.T) {
 }
 
 func TestGetFAR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -130,6 +138,10 @@ func TestGetFAR(t *testing.T) {
 }
 
 func TestGetFARAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -169,6 +181,10 @@ func TestGetFARAll(t *testing.T) {
 }
 
 func TestRemoveFAR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {

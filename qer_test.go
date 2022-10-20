@@ -11,6 +11,10 @@ import (
 )
 
 func TestCreateQER(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -81,6 +85,10 @@ func TestCreateQER(t *testing.T) {
 }
 
 func TestGetQER(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -125,6 +133,10 @@ func TestGetQER(t *testing.T) {
 }
 
 func TestGetQERAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -164,6 +176,10 @@ func TestGetQERAll(t *testing.T) {
 }
 
 func TestRemoveQER(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
