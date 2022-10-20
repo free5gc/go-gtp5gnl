@@ -25,7 +25,7 @@ type PDR struct {
 	Precedence      *uint32
 	PDI             *PDI
 	OuterHdrRemoval *uint8
-	FARID           []uint32
+	FARID           *uint32
 	QERID           []uint32
 	URRID           []uint32
 	SEID            *uint64
@@ -55,7 +55,7 @@ func DecodePDR(b []byte) (*PDR, error) {
 			pdr.OuterHdrRemoval = &v
 		case PDR_FAR_ID:
 			v := native.Uint32(b[n:])
-			pdr.FARID = append(pdr.FARID, v)
+			pdr.FARID = &v
 		case PDR_QER_ID:
 			v := native.Uint32(b[n:])
 			pdr.QERID = append(pdr.QERID, v)
