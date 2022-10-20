@@ -49,7 +49,7 @@ func TestCreateFAR(t *testing.T) {
 	attrs := []nl.Attr{
 		{
 			Type:  FAR_APPLY_ACTION,
-			Value: nl.AttrU8(1),
+			Value: nl.AttrU16(1),
 		},
 		{
 			Type: FAR_FORWARDING_PARAMETER,

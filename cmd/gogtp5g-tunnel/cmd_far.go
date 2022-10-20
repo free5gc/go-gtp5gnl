@@ -35,7 +35,7 @@ func ParseFAROptions(args []string) ([]nl.Attr, error) {
 			}
 			attrs = append(attrs, nl.Attr{
 				Type:  gtp5gnl.FAR_APPLY_ACTION,
-				Value: nl.AttrU8(v),
+				Value: nl.AttrU16(v),
 			})
 		case "--hdr-creation":
 			// --hdr-creation <description> <o-teid> <peer-ipv4> <peer-port>

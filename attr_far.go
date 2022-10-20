@@ -17,7 +17,7 @@ const (
 
 type FAR struct {
 	ID     uint32
-	Action uint8
+	Action uint16
 	Param  *ForwardParam
 	PDRIDs []uint16
 	BARID  *uint8
@@ -35,7 +35,7 @@ func DecodeFAR(b []byte) (*FAR, error) {
 		case FAR_ID:
 			far.ID = native.Uint32(b[n:])
 		case FAR_APPLY_ACTION:
-			far.Action = b[n]
+			far.Action = native.Uint16(b[n:])
 		case FAR_FORWARDING_PARAMETER:
 			param, err := DecodeForwardParam(b[n:])
 			if err != nil {
