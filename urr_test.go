@@ -61,7 +61,7 @@ func TestCreateURR(t *testing.T) {
 		},
 		{
 			Type:  URR_MEASUREMENT_INFO,
-			Value: nl.AttrU64(5),
+			Value: nl.AttrU8(5),
 		},
 		{
 			Type: URR_VOLUME_THRESHOLD,

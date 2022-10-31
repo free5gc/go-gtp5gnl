@@ -48,7 +48,7 @@ type URR struct {
 	Method       uint8
 	Trigger      uint32
 	Period       *uint32
-	Info         *uint64
+	Info         *uint8
 	SEID         *uint64
 	VolThreshold *VolumeThreshold
 	VolQuota     *VolumeQuota
@@ -72,7 +72,7 @@ func DecodeURR(b []byte) (*URR, error) {
 			v := native.Uint32(b[n:])
 			urr.Period = &v
 		case URR_MEASUREMENT_INFO:
-			v := native.Uint64(b[n:])
+			v := uint8(b[n])
 			urr.Info = &v
 		case URR_SEID:
 			v := native.Uint64(b[n:])
