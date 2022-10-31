@@ -49,23 +49,19 @@ func TestCreateURR(t *testing.T) {
 	attrs := []nl.Attr{
 		{
 			Type:  URR_MEASUREMENT_METHOD,
-			Value: nl.AttrU64(2),
+			Value: nl.AttrU8(2),
 		},
 		{
 			Type:  URR_REPORTING_TRIGGER,
-			Value: nl.AttrU64(3),
+			Value: nl.AttrU32(3),
 		},
 		{
 			Type:  URR_MEASUREMENT_PERIOD,
-			Value: nl.AttrU64(4),
+			Value: nl.AttrU32(4),
 		},
 		{
 			Type:  URR_MEASUREMENT_INFO,
-			Value: nl.AttrU64(5),
-		},
-		{
-			Type:  URR_SEQ,
-			Value: nl.AttrU64(6),
+			Value: nl.AttrU8(5),
 		},
 		{
 			Type: URR_VOLUME_THRESHOLD,

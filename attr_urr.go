@@ -10,7 +10,6 @@ const (
 	URR_REPORTING_TRIGGER
 	URR_MEASUREMENT_PERIOD
 	URR_MEASUREMENT_INFO
-	URR_SEQ
 	URR_SEID
 	URR_VOLUME_THRESHOLD
 	URR_VOLUME_QUOTA
@@ -46,11 +45,10 @@ type VolumeQuota struct {
 
 type URR struct {
 	ID           uint32
-	Method       uint64
-	Trigger      uint64
-	Period       *uint64
-	Info         *uint64
-	Seq          *uint64
+	Method       uint8
+	Trigger      uint32
+	Period       *uint32
+	Info         *uint8
 	SEID         *uint64
 	VolThreshold *VolumeThreshold
 	VolQuota     *VolumeQuota
@@ -67,18 +65,15 @@ func DecodeURR(b []byte) (*URR, error) {
 		case URR_ID:
 			urr.ID = native.Uint32(b[n:])
 		case URR_MEASUREMENT_METHOD:
-			urr.Method = native.Uint64(b[n:])
+			urr.Method = uint8(b[n])
 		case URR_REPORTING_TRIGGER:
-			urr.Trigger = native.Uint64(b[n:])
+			urr.Trigger = native.Uint32(b[n:])
 		case URR_MEASUREMENT_PERIOD:
-			v := native.Uint64(b[n:])
+			v := native.Uint32(b[n:])
 			urr.Period = &v
 		case URR_MEASUREMENT_INFO:
-			v := native.Uint64(b[n:])
+			v := uint8(b[n])
 			urr.Info = &v
-		case URR_SEQ:
-			v := native.Uint64(b[n:])
-			urr.Seq = &v
 		case URR_SEID:
 			v := native.Uint64(b[n:])
 			urr.SEID = &v
