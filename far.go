@@ -200,7 +200,7 @@ func GetFAROID(c *Client, link *Link, oid OID) (*FAR, error) {
 		return nil, err
 	}
 	if len(rsps) < 1 {
-		return nil, err
+		return nil, fmt.Errorf("nil FAR of oid(%v)", oid)
 	}
 	far, err := DecodeFAR(rsps[0].Body[genl.SizeofHeader:])
 	if err != nil {
