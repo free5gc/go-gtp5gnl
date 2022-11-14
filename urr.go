@@ -111,7 +111,7 @@ func UpdateURROID(c *Client, link *Link, oid OID, attrs []nl.Attr) ([]USAReport,
 		return nil, err
 	}
 	if len(rsps) < 1 {
-		return nil, err
+		return nil, fmt.Errorf("UpdateURROID: nil URR of oid(%v)", oid)
 	}
 	reports, err := DecodeAllUSAReports(rsps[0].Body[genl.SizeofHeader:])
 	if err != nil {
@@ -164,7 +164,7 @@ func RemoveURROID(c *Client, link *Link, oid OID) ([]USAReport, error) {
 		return nil, err
 	}
 	if len(rsps) < 1 {
-		return nil, err
+		return nil, fmt.Errorf("RemoveURROID: nil URR of oid(%v)", oid)
 	}
 	reports, err := DecodeAllUSAReports(rsps[0].Body[genl.SizeofHeader:])
 	if err != nil {
@@ -216,7 +216,7 @@ func GetURROID(c *Client, link *Link, oid OID) (*URR, error) {
 		return nil, err
 	}
 	if len(rsps) < 1 {
-		return nil, err
+		return nil, fmt.Errorf("GetURROID: nil URR of oid(%v)", oid)
 	}
 	urr, err := DecodeURR(rsps[0].Body[genl.SizeofHeader:])
 	if err != nil {

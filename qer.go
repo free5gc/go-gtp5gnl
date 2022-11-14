@@ -207,7 +207,7 @@ func GetQEROID(c *Client, link *Link, oid OID) (*QER, error) {
 		return nil, err
 	}
 	if len(rsps) < 1 {
-		return nil, err
+		return nil, fmt.Errorf("nil QER of oid(%v)", oid)
 	}
 	qer, err := DecodeQER(rsps[0].Body[genl.SizeofHeader:])
 	if err != nil {

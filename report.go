@@ -51,7 +51,7 @@ func GetReportOID(c *Client, link *Link, oid OID) ([]USAReport, error) {
 		return nil, err
 	}
 	if len(rsps) < 1 {
-		return nil, err
+		return nil, fmt.Errorf("nil Report of oid(%v)", oid)
 	}
 	reports, err := DecodeAllUSAReports(rsps[0].Body[genl.SizeofHeader:])
 	if err != nil {

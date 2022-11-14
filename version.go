@@ -1,6 +1,7 @@
 package gtp5gnl
 
 import (
+	"fmt"
 	"syscall"
 
 	"github.com/khirono/go-genl"
@@ -20,7 +21,7 @@ func GetVersion(c *Client) (string, error) {
 		return "", err
 	}
 	if len(rsps) != 1 {
-		return "", err
+		return "", fmt.Errorf("invalid Version")
 	}
 	ver, err := DecodeVersion(rsps[0].Body[genl.SizeofHeader:])
 	if err != nil {

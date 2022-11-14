@@ -193,7 +193,7 @@ func GetBAROID(c *Client, link *Link, oid OID) (*BAR, error) {
 		return nil, err
 	}
 	if len(rsps) < 1 {
-		return nil, err
+		return nil, fmt.Errorf("nil BAR of oid(%v)", oid)
 	}
 	bar, err := DecodeBAR(rsps[0].Body[genl.SizeofHeader:])
 	if err != nil {
