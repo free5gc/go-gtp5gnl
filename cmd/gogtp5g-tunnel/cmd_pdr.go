@@ -393,7 +393,13 @@ func CmdDeletePDR(args []string) error {
 		return err
 	}
 
-	return gtp5gnl.RemovePDROID(c, link, oid)
+	USAReports, err := gtp5gnl.RemovePDROID(c, link, oid)
+
+	if USAReports != nil {
+		fmt.Printf("Reports: %+v\n", USAReports)
+	}
+
+	return err
 }
 
 // get pdr <ifname> <oid>

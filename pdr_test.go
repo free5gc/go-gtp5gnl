@@ -220,8 +220,12 @@ func TestRemovePDR(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = RemovePDR(c, link, 2)
+	rs, err := RemovePDR(c, link, 2)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if rs != nil {
+		log.Printf("Reports: %+v\n", rs)
 	}
 }

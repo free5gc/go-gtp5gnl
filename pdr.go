@@ -117,21 +117,21 @@ func UpdatePDROID(c *Client, link *Link, oid OID, attrs []nl.Attr) error {
 	return err
 }
 
-func RemovePDR(c *Client, link *Link, pdrid int) error {
+func RemovePDR(c *Client, link *Link, pdrid int) ([]USAReport, error) {
 	return RemovePDROID(c, link, OID{uint64(pdrid)})
 }
 
-func RemovePDROID(c *Client, link *Link, oid OID) error {
+func RemovePDROID(c *Client, link *Link, oid OID) ([]USAReport, error) {
 	flags := syscall.NLM_F_EXCL
 	flags |= syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
 	err := req.Append(genl.Header{Cmd: CMD_DEL_PDR})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	pdrid, ok := oid.ID()
 	if !ok {
-		return fmt.Errorf("invalid oid: %v", oid)
+		return nil, fmt.Errorf("invalid oid: %v", oid)
 	}
 	err = req.Append(&nl.AttrList{
 		{
@@ -144,7 +144,7 @@ func RemovePDROID(c *Client, link *Link, oid OID) error {
 		},
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	seid, ok := oid.SEID()
 	if ok {
@@ -153,11 +153,21 @@ func RemovePDROID(c *Client, link *Link, oid OID) error {
 			Value: nl.AttrU64(seid),
 		})
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	_, err = c.Do(req)
-	return err
+	rsps, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if len(rsps) < 1 {
+		return nil, fmt.Errorf("RemoveURROID(%v): no usage report", oid)
+	}
+	reports, err := DecodeAllUSAReports(rsps[0].Body[genl.SizeofHeader:])
+	if err != nil {
+		return nil, err
+	}
+	return reports, err
 }
 
 func GetPDR(c *Client, link *Link, pdrid int) (*PDR, error) {
