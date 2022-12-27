@@ -9,6 +9,7 @@ const (
 	URR_MEASUREMENT_METHOD
 	URR_REPORTING_TRIGGER
 	URR_MEASUREMENT_PERIOD
+	URR_QUOTA_VALIDITY_TIME
 	URR_MEASUREMENT_INFO
 	URR_SEID
 	URR_VOLUME_THRESHOLD
@@ -48,6 +49,7 @@ type URR struct {
 	Method       uint8
 	Trigger      uint32
 	Period       *uint32
+	validTime    *uint32
 	Info         *uint8
 	SEID         *uint64
 	VolThreshold *VolumeThreshold
@@ -71,6 +73,9 @@ func DecodeURR(b []byte) (*URR, error) {
 		case URR_MEASUREMENT_PERIOD:
 			v := native.Uint32(b[n:])
 			urr.Period = &v
+		case URR_QUOTA_VALIDITY_TIME:
+			v := native.Uint32(b[n:])
+			urr.validTime = &v
 		case URR_MEASUREMENT_INFO:
 			v := uint8(b[n])
 			urr.Info = &v
