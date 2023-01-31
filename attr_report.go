@@ -7,7 +7,9 @@ import (
 )
 
 const (
-	UR = iota + 5
+	UR = iota + 9
+	SESS_URRS
+	URR_NUM
 )
 
 const (
@@ -18,10 +20,11 @@ const (
 	UR_QUERY_URR_REFERENCE
 	UR_START_TIME
 	UR_END_TIME
+	UR_SEID
 )
 
 const (
-	UR_VOLUME_MEASUREMENT_FLAGS = iota + 1
+	UR_VOLUME_MEASUREMENT_FLAGS = iota + 13
 
 	UR_VOLUME_MEASUREMENT_TOVOL
 	UR_VOLUME_MEASUREMENT_UVOL
@@ -42,6 +45,7 @@ const (
 )
 
 type USAReport struct {
+	SEID           uint64
 	URRID          uint32
 	URSEQN         uint32
 	USARTrigger    uint32
@@ -135,6 +139,8 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 		}
 
 		switch hdr.MaskedType() {
+		case UR_SEID:
+			report.SEID = native.Uint64(b[n:])
 		case UR_URRID:
 			report.URRID = native.Uint32(b[n:])
 		case UR_USAGE_REPORT_TRIGGER:
