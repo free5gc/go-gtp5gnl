@@ -8,6 +8,8 @@ import (
 
 const (
 	UR = iota + 5
+	SEID_URR
+	URR_NUM
 )
 
 const (
@@ -18,6 +20,8 @@ const (
 	UR_QUERY_URR_REFERENCE
 	UR_START_TIME
 	UR_END_TIME
+	UR_SEID
+	UR_END
 )
 
 const (
@@ -30,6 +34,7 @@ const (
 	UR_VOLUME_MEASUREMENT_TOPACKET
 	UR_VOLUME_MEASUREMENT_UPACKET
 	UR_VOLUME_MEASUREMENT_DPACKET
+	UR_VOLUME_MEASUREMENT_END
 )
 
 const (
@@ -49,6 +54,7 @@ type USAReport struct {
 	QueryUrrRef    uint32
 	StartTime      time.Time
 	EndTime        time.Time
+	SEID           uint64
 }
 
 type VolumeMeasurement struct {
@@ -63,6 +69,7 @@ type VolumeMeasurement struct {
 
 func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 	var VolMeasurement VolumeMeasurement
+	VMEnd := false
 
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
@@ -95,9 +102,14 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 			v := native.Uint64(b[n:])
 			VolMeasurement.DownlinkPktNum = v
 			VolMeasurement.Flag |= DLNOP
+		case UR_VOLUME_MEASUREMENT_END:
+			VMEnd = true
 		}
 
 		b = b[hdr.Len.Align():]
+		if VMEnd {
+			break
+		}
 	}
 	return VolMeasurement, nil
 }
@@ -127,6 +139,7 @@ func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
 
 func DecodeUSAReport(b []byte) (*USAReport, error) {
 	report := new(USAReport)
+	UREnd := false
 
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
@@ -153,9 +166,17 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 		case UR_END_TIME:
 			v := native.Uint64(b[n:])
 			report.EndTime = time.Unix(0, int64(v))
+		case UR_SEID:
+			report.SEID = native.Uint64(b[n:])
+		// The UR_END prevents iterate to the next UR netlink attirbute
+		case UR_END:
+			UREnd = true
 		}
 
 		b = b[hdr.Len.Align():]
+		if UREnd {
+			break
+		}
 	}
 	return report, nil
 }
