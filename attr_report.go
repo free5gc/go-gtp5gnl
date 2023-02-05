@@ -21,7 +21,6 @@ const (
 	UR_START_TIME
 	UR_END_TIME
 	UR_SEID
-	UR_END
 )
 
 const (
@@ -34,7 +33,6 @@ const (
 	UR_VOLUME_MEASUREMENT_TOPACKET
 	UR_VOLUME_MEASUREMENT_UPACKET
 	UR_VOLUME_MEASUREMENT_DPACKET
-	UR_VOLUME_MEASUREMENT_END
 )
 
 const (
@@ -67,14 +65,14 @@ type VolumeMeasurement struct {
 	DownlinkPktNum uint64
 }
 
-func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
+func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, []byte, error) {
 	var VolMeasurement VolumeMeasurement
 	VMEnd := false
 
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
 		if err != nil {
-			return VolMeasurement, err
+			return VolMeasurement, b, err
 		}
 
 		switch hdr.MaskedType() {
@@ -102,8 +100,8 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 			v := native.Uint64(b[n:])
 			VolMeasurement.DownlinkPktNum = v
 			VolMeasurement.Flag |= DLNOP
-		case UR_VOLUME_MEASUREMENT_END:
-			VMEnd = true
+		default:
+			return VolMeasurement, nil, nil
 		}
 
 		b = b[hdr.Len.Align():]
@@ -111,7 +109,7 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 			break
 		}
 	}
-	return VolMeasurement, nil
+	return VolMeasurement, nil, nil
 }
 
 func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
@@ -139,7 +137,7 @@ func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
 
 func DecodeUSAReport(b []byte) (*USAReport, error) {
 	report := new(USAReport)
-	UREnd := false
+	urAttrEnd := false
 
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
@@ -155,7 +153,7 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 		case UR_URSEQN:
 			report.URSEQN = native.Uint32(b[n:])
 		case UR_VOLUME_MEASUREMENT:
-			volMeasurement, err := DecodeVolumeMeasurement(b[n:])
+			volMeasurement, _, err := DecodeVolumeMeasurement(b[n:])
 			if err != nil {
 				return nil, err
 			}
@@ -168,13 +166,11 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 			report.EndTime = time.Unix(0, int64(v))
 		case UR_SEID:
 			report.SEID = native.Uint64(b[n:])
-		// The UR_END prevents iterate to the next UR netlink attirbute
-		case UR_END:
-			UREnd = true
+			urAttrEnd = true
 		}
 
 		b = b[hdr.Len.Align():]
-		if UREnd {
+		if urAttrEnd {
 			break
 		}
 	}
