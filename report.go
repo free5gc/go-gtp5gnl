@@ -60,10 +60,13 @@ func GetReportOID(c *Client, link *Link, oid OID) ([]USAReport, error) {
 	return reports, err
 }
 
-func GetMultiReports(c *Client, link *Link, urrids []uint64, seids []uint64) ([]USAReport, error) {
+// map[uint64][]uint32 // key: seid, value: urrids
+func GetMultiReports(c *Client, link *Link, lSeidUrridsMap map[uint64][]uint32) ([]USAReport, error) {
 	var oids []OID
-	for i, lseid := range seids {
-		oids = append(oids, OID{lseid, uint64(urrids[i])})
+	for seid, urrIds := range lSeidUrridsMap {
+		for _, urrId := range urrIds {
+			oids = append(oids, OID{seid, uint64(urrId)})
+		}
 	}
 	return GetMultiReportsOID(c, link, oids)
 }
