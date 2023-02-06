@@ -103,7 +103,7 @@ func GetMultiReportsOID(c *Client, link *Link, oids []OID) ([]USAReport, error) 
 		seid, ok := oid.SEID()
 		if ok {
 			attrs = append(attrs, nl.Attr{
-				Type: SEID_URR,
+				Type: URR_MULTI_SEID_URRID,
 				Value: nl.AttrList{
 					{
 						Type:  URR_ID,

@@ -8,8 +8,6 @@ import (
 
 const (
 	UR = iota + 5
-	SEID_URR
-	URR_NUM
 )
 
 const (
@@ -67,8 +65,6 @@ type VolumeMeasurement struct {
 
 func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, []byte, error) {
 	var VolMeasurement VolumeMeasurement
-	VMEnd := false
-
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
 		if err != nil {
@@ -105,9 +101,6 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, []byte, error) {
 		}
 
 		b = b[hdr.Len.Align():]
-		if VMEnd {
-			break
-		}
 	}
 	return VolMeasurement, nil, nil
 }
@@ -120,10 +113,9 @@ func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		switch hdr.MaskedType() {
 		case UR:
-			r, err := DecodeUSAReport(b[n:])
+			r, err := DecodeUSAReport(b[n:int(hdr.Len)])
 			if err != nil {
 				return nil, err
 			}
@@ -137,14 +129,12 @@ func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
 
 func DecodeUSAReport(b []byte) (*USAReport, error) {
 	report := new(USAReport)
-	urAttrEnd := false
 
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
 		if err != nil {
 			return nil, err
 		}
-
 		switch hdr.MaskedType() {
 		case UR_URRID:
 			report.URRID = native.Uint32(b[n:])
@@ -153,7 +143,7 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 		case UR_URSEQN:
 			report.URSEQN = native.Uint32(b[n:])
 		case UR_VOLUME_MEASUREMENT:
-			volMeasurement, _, err := DecodeVolumeMeasurement(b[n:])
+			volMeasurement, _, err := DecodeVolumeMeasurement(b[n:int(hdr.Len)])
 			if err != nil {
 				return nil, err
 			}
@@ -166,13 +156,9 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 			report.EndTime = time.Unix(0, int64(v))
 		case UR_SEID:
 			report.SEID = native.Uint64(b[n:])
-			urAttrEnd = true
 		}
 
 		b = b[hdr.Len.Align():]
-		if urAttrEnd {
-			break
-		}
 	}
 	return report, nil
 }
