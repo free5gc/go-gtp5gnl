@@ -80,13 +80,13 @@ func DecodeURR(b []byte) (*URR, error) {
 			v := native.Uint64(b[n:])
 			urr.SEID = &v
 		case URR_VOLUME_THRESHOLD:
-			volthreshold, err := decodeVolumeThreshold(b[n:])
+			volthreshold, err := decodeVolumeThreshold(b[n:int(hdr.Len)])
 			if err != nil {
 				return nil, err
 			}
 			urr.VolThreshold = &volthreshold
 		case URR_VOLUME_QUOTA:
-			volumequota, err := decodeVolumeQuota(b[n:])
+			volumequota, err := decodeVolumeQuota(b[n:int(hdr.Len)])
 			if err != nil {
 				return nil, err
 			}
