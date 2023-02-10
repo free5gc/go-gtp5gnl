@@ -63,12 +63,12 @@ type VolumeMeasurement struct {
 	DownlinkPktNum uint64
 }
 
-func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, []byte, error) {
+func decodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 	var VolMeasurement VolumeMeasurement
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
 		if err != nil {
-			return VolMeasurement, b, err
+			return VolMeasurement, err
 		}
 
 		switch hdr.MaskedType() {
@@ -97,12 +97,12 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, []byte, error) {
 			VolMeasurement.DownlinkPktNum = v
 			VolMeasurement.Flag |= DLNOP
 		default:
-			return VolMeasurement, nil, nil
+			return VolMeasurement, nil
 		}
 
 		b = b[hdr.Len.Align():]
 	}
-	return VolMeasurement, nil, nil
+	return VolMeasurement, nil
 }
 
 func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
@@ -115,7 +115,7 @@ func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
 		}
 		switch hdr.MaskedType() {
 		case UR:
-			r, err := DecodeUSAReport(b[n:int(hdr.Len)])
+			r, err := decodeUSAReport(b[n:int(hdr.Len)])
 			if err != nil {
 				return nil, err
 			}
@@ -127,7 +127,7 @@ func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
 	return usars, nil
 }
 
-func DecodeUSAReport(b []byte) (*USAReport, error) {
+func decodeUSAReport(b []byte) (*USAReport, error) {
 	report := new(USAReport)
 
 	for len(b) > 0 {
@@ -143,7 +143,7 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 		case UR_URSEQN:
 			report.URSEQN = native.Uint32(b[n:])
 		case UR_VOLUME_MEASUREMENT:
-			volMeasurement, _, err := DecodeVolumeMeasurement(b[n:int(hdr.Len)])
+			volMeasurement, err := decodeVolumeMeasurement(b[n:int(hdr.Len)])
 			if err != nil {
 				return nil, err
 			}
