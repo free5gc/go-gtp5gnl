@@ -18,6 +18,7 @@ const (
 	UR_QUERY_URR_REFERENCE
 	UR_START_TIME
 	UR_END_TIME
+	UR_SEID
 )
 
 const (
@@ -49,6 +50,7 @@ type USAReport struct {
 	QueryUrrRef    uint32
 	StartTime      time.Time
 	EndTime        time.Time
+	SEID           uint64
 }
 
 type VolumeMeasurement struct {
@@ -61,9 +63,8 @@ type VolumeMeasurement struct {
 	DownlinkPktNum uint64
 }
 
-func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
+func decodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 	var VolMeasurement VolumeMeasurement
-
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
 		if err != nil {
@@ -95,6 +96,8 @@ func DecodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 			v := native.Uint64(b[n:])
 			VolMeasurement.DownlinkPktNum = v
 			VolMeasurement.Flag |= DLNOP
+		default:
+			return VolMeasurement, nil
 		}
 
 		b = b[hdr.Len.Align():]
@@ -110,10 +113,9 @@ func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		switch hdr.MaskedType() {
 		case UR:
-			r, err := DecodeUSAReport(b[n:])
+			r, err := decodeUSAReport(b[n:int(hdr.Len)])
 			if err != nil {
 				return nil, err
 			}
@@ -125,7 +127,7 @@ func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
 	return usars, nil
 }
 
-func DecodeUSAReport(b []byte) (*USAReport, error) {
+func decodeUSAReport(b []byte) (*USAReport, error) {
 	report := new(USAReport)
 
 	for len(b) > 0 {
@@ -133,7 +135,6 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		switch hdr.MaskedType() {
 		case UR_URRID:
 			report.URRID = native.Uint32(b[n:])
@@ -142,7 +143,7 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 		case UR_URSEQN:
 			report.URSEQN = native.Uint32(b[n:])
 		case UR_VOLUME_MEASUREMENT:
-			volMeasurement, err := DecodeVolumeMeasurement(b[n:])
+			volMeasurement, err := decodeVolumeMeasurement(b[n:int(hdr.Len)])
 			if err != nil {
 				return nil, err
 			}
@@ -153,6 +154,8 @@ func DecodeUSAReport(b []byte) (*USAReport, error) {
 		case UR_END_TIME:
 			v := native.Uint64(b[n:])
 			report.EndTime = time.Unix(0, int64(v))
+		case UR_SEID:
+			report.SEID = native.Uint64(b[n:])
 		}
 
 		b = b[hdr.Len.Align():]

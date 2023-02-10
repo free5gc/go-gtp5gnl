@@ -13,6 +13,8 @@ const (
 	URR_SEID
 	URR_VOLUME_THRESHOLD
 	URR_VOLUME_QUOTA
+	URR_MULTI_SEID_URRID
+	URR_NUM
 )
 
 const (
@@ -78,13 +80,13 @@ func DecodeURR(b []byte) (*URR, error) {
 			v := native.Uint64(b[n:])
 			urr.SEID = &v
 		case URR_VOLUME_THRESHOLD:
-			volthreshold, err := DecodeVolumeThreshold(b[n:])
+			volthreshold, err := decodeVolumeThreshold(b[n:int(hdr.Len)])
 			if err != nil {
 				return nil, err
 			}
 			urr.VolThreshold = &volthreshold
 		case URR_VOLUME_QUOTA:
-			volumequota, err := DecodeVolumeQuota(b[n:])
+			volumequota, err := decodeVolumeQuota(b[n:int(hdr.Len)])
 			if err != nil {
 				return nil, err
 			}
@@ -96,7 +98,7 @@ func DecodeURR(b []byte) (*URR, error) {
 	return urr, nil
 }
 
-func DecodeVolumeThreshold(b []byte) (VolumeThreshold, error) {
+func decodeVolumeThreshold(b []byte) (VolumeThreshold, error) {
 	var volumethreshold VolumeThreshold
 
 	for len(b) > 0 {
@@ -122,7 +124,7 @@ func DecodeVolumeThreshold(b []byte) (VolumeThreshold, error) {
 	}
 	return volumethreshold, nil
 }
-func DecodeVolumeQuota(b []byte) (VolumeQuota, error) {
+func decodeVolumeQuota(b []byte) (VolumeQuota, error) {
 	var volumequota VolumeQuota
 
 	for len(b) > 0 {
