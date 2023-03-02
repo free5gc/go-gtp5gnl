@@ -1,7 +1,7 @@
 package gtp5gnl
 
 const (
-	BUFFER = iota + 5
+	BUFFER = iota + 1
 	REPORT
 )
 
