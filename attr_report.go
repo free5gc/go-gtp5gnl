@@ -71,7 +71,7 @@ const (
 )
 
 // The netlink attribute size of UR need to count the UR header(4) + size of the attributes (and it's header) in UR
-func URnlAttrSize() int {
+func MaxNetlinkUsageReportNum() int {
 	size := NETLIMK_ATTR_HDR_SIZE         // UR attr header
 
 	size += NETLIMK_ATTR_HDR_SIZE         // UR_URRID attr header
@@ -106,7 +106,7 @@ func URnlAttrSize() int {
 	size += NETLIMK_ATTR_HDR_SIZE         // UR_SEID attr header
 	size += int(unsafe.Sizeof(uint64(0))) // UR_SEID attr data
 
-	return size
+	return MAX_NETLINK_MSG_BODY_SIZE / size
 }
 
 func decodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
