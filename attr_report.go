@@ -2,6 +2,7 @@ package gtp5gnl
 
 import (
 	"time"
+	"unsafe"
 
 	"github.com/khirono/go-nl"
 )
@@ -61,6 +62,51 @@ type VolumeMeasurement struct {
 	TotalPktNum    uint64
 	UplinkPktNum   uint64
 	DownlinkPktNum uint64
+}
+
+// The maximun netlink message size is 16K, and the body for the attibutes are 7856 Bytes
+const (
+	MAX_NETLINK_MSG_BODY_SIZE = 7856
+	NETLIMK_ATTR_HDR_SIZE     = 4
+)
+
+// The netlink attribute size of UR need to count the UR header(4) + size of the attributes (and it's header) in UR
+func URnlAttrSize() int {
+	size := NETLIMK_ATTR_HDR_SIZE         // UR attr header
+
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_URRID attr header
+	size += int(unsafe.Sizeof(uint32(0))) // UR_URRID attr data
+
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_USAGE_REPORT_TRIGGER attr header
+	size += int(unsafe.Sizeof(uint32(0))) // UR_USAGE_REPORT_TRIGGER attr data
+
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_URSEQN attr header
+	size += int(unsafe.Sizeof(uint32(0))) // UR_URSEQN attr data
+
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_VOLUME_MEASUREMENT attr header
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_VOLUME_MEASUREMENT_TOVOL attr header
+	size += int(unsafe.Sizeof(uint64(0))) // UR_VOLUME_MEASUREMENT_TOVOL attr data
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_VOLUME_MEASUREMENT_UVOL attr header
+	size += int(unsafe.Sizeof(uint64(0))) // UR_VOLUME_MEASUREMENT_UVOL attr data
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_VOLUME_MEASUREMENT_DVOL attr header
+	size += int(unsafe.Sizeof(uint64(0))) // UR_VOLUME_MEASUREMENT_DVOL attr data
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_VOLUME_MEASUREMENT_TOPACKET attr header
+	size += int(unsafe.Sizeof(uint64(0))) // UR_VOLUME_MEASUREMENT_TOPACKET attr data
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_VOLUME_MEASUREMENT_UPACKET attr header
+	size += int(unsafe.Sizeof(uint64(0))) // UR_VOLUME_MEASUREMENT_UPACKET attr data
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_VOLUME_MEASUREMENT_DPACKET attr header
+	size += int(unsafe.Sizeof(uint64(0))) // UR_VOLUME_MEASUREMENT_DPACKET attr data
+
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_START_TIME attr header
+	size += int(unsafe.Sizeof(uint64(0))) // UR_START_TIME attr data
+
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_END_TIME attr header
+	size += int(unsafe.Sizeof(uint64(0))) // UR_END_TIME attr data
+
+	size += NETLIMK_ATTR_HDR_SIZE         // UR_SEID attr header
+	size += int(unsafe.Sizeof(uint64(0))) // UR_SEID attr data
+
+	return size
 }
 
 func decodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
