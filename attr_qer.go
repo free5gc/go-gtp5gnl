@@ -87,10 +87,12 @@ const (
 )
 
 type MBR struct {
-	ULHigh uint32
-	ULLow  uint8
-	DLHigh uint32
-	DLLow  uint8
+	ULHigh  uint32
+	ULLow   uint8
+	UL_Kbps uint64 // for viewer-friendly
+	DLHigh  uint32
+	DLLow   uint8
+	DL_Kbps uint64 // for viewer-friendly
 }
 
 func DecodeMBR(b []byte) (MBR, error) {
@@ -112,6 +114,10 @@ func DecodeMBR(b []byte) (MBR, error) {
 		}
 		b = b[hdr.Len.Align():]
 	}
+
+	mbr.UL_Kbps = uint64(mbr.ULHigh)<<8 + uint64(mbr.ULLow)
+	mbr.DL_Kbps = uint64(mbr.DLHigh)<<8 + uint64(mbr.DLLow)
+
 	return mbr, nil
 }
 
@@ -123,10 +129,12 @@ const (
 )
 
 type GBR struct {
-	ULHigh uint32
-	ULLow  uint8
-	DLHigh uint32
-	DLLow  uint8
+	ULHigh  uint32
+	ULLow   uint8
+	UL_Kbps uint64 // for viewer-friendly
+	DLHigh  uint32
+	DLLow   uint8
+	DL_Kbps uint64 // for viewer-friendly
 }
 
 func DecodeGBR(b []byte) (GBR, error) {
@@ -148,5 +156,9 @@ func DecodeGBR(b []byte) (GBR, error) {
 		}
 		b = b[hdr.Len.Align():]
 	}
+
+	gbr.UL_Kbps = uint64(gbr.ULHigh)<<8 + uint64(gbr.ULLow)
+	gbr.DL_Kbps = uint64(gbr.DLHigh)<<8 + uint64(gbr.DLLow)
+
 	return gbr, nil
 }
