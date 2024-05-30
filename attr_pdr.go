@@ -38,14 +38,15 @@ func DecodePDR(b []byte) (*PDR, error) {
 		if err != nil {
 			return nil, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case PDR_ID:
-			pdr.ID = native.Uint16(b[n:])
+			pdr.ID = native.Uint16(b[n:attrLen])
 		case PDR_PRECEDENCE:
-			v := native.Uint32(b[n:])
+			v := native.Uint32(b[n:attrLen])
 			pdr.Precedence = &v
 		case PDR_PDI:
-			pdi, err := DecodePDI(b[n:])
+			pdi, err := DecodePDI(b[n:attrLen])
 			if err != nil {
 				return nil, err
 			}
@@ -54,16 +55,16 @@ func DecodePDR(b []byte) (*PDR, error) {
 			v := uint8(b[n])
 			pdr.OuterHdrRemoval = &v
 		case PDR_FAR_ID:
-			v := native.Uint32(b[n:])
+			v := native.Uint32(b[n:attrLen])
 			pdr.FARID = &v
 		case PDR_QER_ID:
-			v := native.Uint32(b[n:])
+			v := native.Uint32(b[n:attrLen])
 			pdr.QERID = append(pdr.QERID, v)
 		case PDR_URR_ID:
-			v := native.Uint32(b[n:])
+			v := native.Uint32(b[n:attrLen])
 			pdr.URRID = append(pdr.URRID, v)
 		case PDR_SEID:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			pdr.SEID = &v
 		default:
 			log.Printf("unknown type: %v\n", hdr.Type)
@@ -92,18 +93,19 @@ func DecodePDI(b []byte) (PDI, error) {
 		if err != nil {
 			return pdi, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case PDI_UE_ADDR_IPV4:
 			pdi.UEAddr = make([]byte, 4)
 			copy(pdi.UEAddr, b[n:n+4])
 		case PDI_F_TEID:
-			fteid, err := DecodeFTEID(b[n:])
+			fteid, err := DecodeFTEID(b[n:attrLen])
 			if err != nil {
 				return pdi, err
 			}
 			pdi.FTEID = &fteid
 		case PDI_SDF_FILTER:
-			sdf, err := DecodeSDFFilter(b[n:])
+			sdf, err := DecodeSDFFilter(b[n:attrLen])
 			if err != nil {
 				return pdi, err
 			}
@@ -131,9 +133,10 @@ func DecodeFTEID(b []byte) (FTEID, error) {
 		if err != nil {
 			return fteid, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case F_TEID_I_TEID:
-			fteid.TEID = native.Uint32(b[n:])
+			fteid.TEID = native.Uint32(b[n:attrLen])
 		case F_TEID_GTPU_ADDR_IPV4:
 			fteid.GTPuAddr = make([]byte, 4)
 			copy(fteid.GTPuAddr, b[n:n+4])
@@ -166,24 +169,25 @@ func DecodeSDFFilter(b []byte) (SDFFilter, error) {
 		if err != nil {
 			return sdf, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case SDF_FILTER_FLOW_DESCRIPTION:
-			fd, err := DecodeFlowDesc(b[n:])
+			fd, err := DecodeFlowDesc(b[n:attrLen])
 			if err != nil {
 				return sdf, err
 			}
 			sdf.FD = &fd
 		case SDF_FILTER_TOS_TRAFFIC_CLASS:
-			v := native.Uint16(b[n:])
+			v := native.Uint16(b[n:attrLen])
 			sdf.TTC = &v
 		case SDF_FILTER_SECURITY_PARAMETER_INDEX:
-			v := native.Uint32(b[n:])
+			v := native.Uint32(b[n:attrLen])
 			sdf.SPI = &v
 		case SDF_FILTER_FLOW_LABEL:
-			v := native.Uint32(b[n:])
+			v := native.Uint32(b[n:attrLen])
 			sdf.FL = &v
 		case SDF_FILTER_SDF_FILTER_ID:
-			v := native.Uint32(b[n:])
+			v := native.Uint32(b[n:attrLen])
 			sdf.BID = &v
 		default:
 			log.Printf("unknown type: %v\n", hdr.Type)
@@ -233,6 +237,7 @@ func DecodeFlowDesc(b []byte) (FlowDesc, error) {
 		if err != nil {
 			return fd, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case FLOW_DESCRIPTION_ACTION:
 			fd.Action = b[n]
@@ -253,8 +258,8 @@ func DecodeFlowDesc(b []byte) (FlowDesc, error) {
 			fd.Dst.Mask = make([]byte, 4)
 			copy(fd.Dst.Mask, b[n:n+4])
 		case FLOW_DESCRIPTION_SRC_PORT:
-			for n < int(hdr.Len) {
-				v := native.Uint32(b[n:])
+			for n < attrLen {
+				v := native.Uint32(b[n:attrLen])
 				lb := uint16(v >> 16)
 				ub := uint16(v)
 				x := []uint16{lb}
@@ -265,8 +270,8 @@ func DecodeFlowDesc(b []byte) (FlowDesc, error) {
 				n += 4
 			}
 		case FLOW_DESCRIPTION_DEST_PORT:
-			for n < int(hdr.Len) {
-				v := native.Uint32(b[n:])
+			for n < attrLen {
+				v := native.Uint32(b[n:attrLen])
 				lb := uint16(v >> 16)
 				ub := uint16(v)
 				x := []uint16{lb}
