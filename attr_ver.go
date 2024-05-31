@@ -7,12 +7,13 @@ import (
 )
 
 func DecodeVersion(b []byte) (string, error) {
-	_, n, err := nl.DecodeAttrHdr(b)
+	hdr, n, err := nl.DecodeAttrHdr(b)
 	if err != nil {
 		return "", err
 	}
 
-	ver := string(bytes.Trim(b[n:], "\x00"))
+	attrLen := int(hdr.Len)
+	ver := string(bytes.Trim(b[n:attrLen], "\x00"))
 
 	return ver, err
 }

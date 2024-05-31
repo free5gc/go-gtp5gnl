@@ -63,30 +63,31 @@ func DecodeURR(b []byte) (*URR, error) {
 		if err != nil {
 			return nil, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case URR_ID:
-			urr.ID = native.Uint32(b[n:])
+			urr.ID = native.Uint32(b[n:attrLen])
 		case URR_MEASUREMENT_METHOD:
 			urr.Method = uint8(b[n])
 		case URR_REPORTING_TRIGGER:
-			urr.Trigger = native.Uint32(b[n:])
+			urr.Trigger = native.Uint32(b[n:attrLen])
 		case URR_MEASUREMENT_PERIOD:
-			v := native.Uint32(b[n:])
+			v := native.Uint32(b[n:attrLen])
 			urr.Period = &v
 		case URR_MEASUREMENT_INFO:
 			v := uint8(b[n])
 			urr.Info = &v
 		case URR_SEID:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			urr.SEID = &v
 		case URR_VOLUME_THRESHOLD:
-			volthreshold, err := decodeVolumeThreshold(b[n:int(hdr.Len)])
+			volthreshold, err := decodeVolumeThreshold(b[n:attrLen])
 			if err != nil {
 				return nil, err
 			}
 			urr.VolThreshold = &volthreshold
 		case URR_VOLUME_QUOTA:
-			volumequota, err := decodeVolumeQuota(b[n:int(hdr.Len)])
+			volumequota, err := decodeVolumeQuota(b[n:attrLen])
 			if err != nil {
 				return nil, err
 			}
@@ -106,24 +107,26 @@ func decodeVolumeThreshold(b []byte) (VolumeThreshold, error) {
 		if err != nil {
 			return volumethreshold, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case URR_VOLUME_THRESHOLD_FLAG:
 			v := uint8(b[n])
 			volumethreshold.flag = v
 		case URR_VOLUME_THRESHOLD_TOVOL:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			volumethreshold.totalVolume = v
 		case URR_VOLUME_THRESHOLD_UVOL:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			volumethreshold.uplinkVolume = v
 		case URR_VOLUME_THRESHOLD_DVOL:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			volumethreshold.downlinkVolume = v
 		}
 		b = b[hdr.Len.Align():]
 	}
 	return volumethreshold, nil
 }
+
 func decodeVolumeQuota(b []byte) (VolumeQuota, error) {
 	var volumequota VolumeQuota
 
@@ -132,18 +135,19 @@ func decodeVolumeQuota(b []byte) (VolumeQuota, error) {
 		if err != nil {
 			return volumequota, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case URR_VOLUME_QUOTA_FLAG:
 			v := uint8(b[n])
 			volumequota.flag = v
 		case URR_VOLUME_QUOTA_TOVOL:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			volumequota.totalVolume = v
 		case URR_VOLUME_QUOTA_UVOL:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			volumequota.uplinkVolume = v
 		case URR_VOLUME_QUOTA_DVOL:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			volumequota.downlinkVolume = v
 		}
 		b = b[hdr.Len.Align():]

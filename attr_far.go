@@ -31,19 +31,20 @@ func DecodeFAR(b []byte) (*FAR, error) {
 		if err != nil {
 			return nil, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case FAR_ID:
-			far.ID = native.Uint32(b[n:])
+			far.ID = native.Uint32(b[n:attrLen])
 		case FAR_APPLY_ACTION:
-			far.Action = native.Uint16(b[n:])
+			far.Action = native.Uint16(b[n:attrLen])
 		case FAR_FORWARDING_PARAMETER:
-			param, err := DecodeForwardParam(b[n:])
+			param, err := DecodeForwardParam(b[n:attrLen])
 			if err != nil {
 				return nil, err
 			}
 			far.Param = &param
 		case FAR_RELATED_TO_PDR:
-			d := b[n:hdr.Len]
+			d := b[n:attrLen]
 			for len(d) > 0 {
 				v := native.Uint16(d)
 				far.PDRIDs = append(far.PDRIDs, v)
@@ -53,7 +54,7 @@ func DecodeFAR(b []byte) (*FAR, error) {
 			v := b[n]
 			far.BARID = &v
 		case FAR_SEID:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			far.SEID = &v
 		}
 		b = b[hdr.Len.Align():]
@@ -65,11 +66,13 @@ const (
 	FORWARDING_PARAMETER_OUTER_HEADER_CREATION = iota + 1
 	FORWARDING_PARAMETER_FORWARDING_POLICY
 	FORWARDING_PARAMETER_PFCPSM_REQ_FLAGS
+	FORWARDING_PARAMETER_TRANSPORT_LEVEL_MARKING
 )
 
 type ForwardParam struct {
 	Creation *HeaderCreation
 	Policy   *string
+	TosTc    uint8
 }
 
 func DecodeForwardParam(b []byte) (ForwardParam, error) {
@@ -79,16 +82,19 @@ func DecodeForwardParam(b []byte) (ForwardParam, error) {
 		if err != nil {
 			return param, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case FORWARDING_PARAMETER_OUTER_HEADER_CREATION:
-			hc, err := DecodeHeaderCreation(b[n:])
+			hc, err := DecodeHeaderCreation(b[n:attrLen])
 			if err != nil {
 				return param, err
 			}
 			param.Creation = &hc
 		case FORWARDING_PARAMETER_FORWARDING_POLICY:
-			s, _, _ := nl.DecodeAttrString(b[n:])
+			s, _, _ := nl.DecodeAttrString(b[n:attrLen])
 			param.Policy = &s
+		case FORWARDING_PARAMETER_TRANSPORT_LEVEL_MARKING:
+			param.TosTc = b[n]
 		}
 		b = b[hdr.Len.Align():]
 	}
@@ -116,16 +122,17 @@ func DecodeHeaderCreation(b []byte) (HeaderCreation, error) {
 		if err != nil {
 			return hc, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case OUTER_HEADER_CREATION_DESCRIPTION:
-			hc.Desc = native.Uint16(b[n:])
+			hc.Desc = native.Uint16(b[n:attrLen])
 		case OUTER_HEADER_CREATION_O_TEID:
-			hc.TEID = native.Uint32(b[n:])
+			hc.TEID = native.Uint32(b[n:attrLen])
 		case OUTER_HEADER_CREATION_PEER_ADDR_IPV4:
 			hc.PeerAddr = make([]byte, 4)
 			copy(hc.PeerAddr, b[n:n+4])
 		case OUTER_HEADER_CREATION_PORT:
-			hc.Port = native.Uint16(b[n:])
+			hc.Port = native.Uint16(b[n:attrLen])
 		}
 		b = b[hdr.Len.Align():]
 	}

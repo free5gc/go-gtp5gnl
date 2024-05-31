@@ -25,6 +25,7 @@ func DecodeBAR(b []byte) (*BAR, error) {
 		if err != nil {
 			return nil, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case BAR_ID:
 			bar.ID = b[n]
@@ -32,10 +33,10 @@ func DecodeBAR(b []byte) (*BAR, error) {
 			v := b[n]
 			bar.Delay = &v
 		case BAR_BUFFERING_PACKETS_COUNT:
-			v := native.Uint16(b[n:])
+			v := native.Uint16(b[n:attrLen])
 			bar.Count = &v
 		case BAR_SEID:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			bar.SEID = &v
 		}
 		b = b[hdr.Len.Align():]

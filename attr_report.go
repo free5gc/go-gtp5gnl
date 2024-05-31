@@ -72,7 +72,7 @@ const (
 
 // The netlink attribute size of UR need to count the UR header(4) + size of the attributes (and it's header) in UR
 func MaxNetlinkUsageReportNum() int {
-	size := NETLIMK_ATTR_HDR_SIZE         // UR attr header
+	size := NETLIMK_ATTR_HDR_SIZE // UR attr header
 
 	size += NETLIMK_ATTR_HDR_SIZE         // UR_URRID attr header
 	size += int(unsafe.Sizeof(uint32(0))) // UR_URRID attr data
@@ -116,30 +116,30 @@ func decodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 		if err != nil {
 			return VolMeasurement, err
 		}
-
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case UR_VOLUME_MEASUREMENT_TOVOL:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			VolMeasurement.TotalVolume = v
 			VolMeasurement.Flag |= TOVOL
 		case UR_VOLUME_MEASUREMENT_UVOL:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			VolMeasurement.UplinkVolume = v
 			VolMeasurement.Flag |= ULVOL
 		case UR_VOLUME_MEASUREMENT_DVOL:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			VolMeasurement.DownlinkVolume = v
 			VolMeasurement.Flag |= DLVOL
 		case UR_VOLUME_MEASUREMENT_TOPACKET:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			VolMeasurement.TotalPktNum = v
 			VolMeasurement.Flag |= TONOP
 		case UR_VOLUME_MEASUREMENT_UPACKET:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			VolMeasurement.UplinkPktNum = v
 			VolMeasurement.Flag |= ULNOP
 		case UR_VOLUME_MEASUREMENT_DPACKET:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			VolMeasurement.DownlinkPktNum = v
 			VolMeasurement.Flag |= DLNOP
 		default:
@@ -159,9 +159,10 @@ func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
 		if err != nil {
 			return nil, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case UR:
-			r, err := decodeUSAReport(b[n:int(hdr.Len)])
+			r, err := decodeUSAReport(b[n:attrLen])
 			if err != nil {
 				return nil, err
 			}
@@ -181,27 +182,28 @@ func decodeUSAReport(b []byte) (*USAReport, error) {
 		if err != nil {
 			return nil, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case UR_URRID:
-			report.URRID = native.Uint32(b[n:])
+			report.URRID = native.Uint32(b[n:attrLen])
 		case UR_USAGE_REPORT_TRIGGER:
-			report.USARTrigger = native.Uint32(b[n:])
+			report.USARTrigger = native.Uint32(b[n:attrLen])
 		case UR_URSEQN:
-			report.URSEQN = native.Uint32(b[n:])
+			report.URSEQN = native.Uint32(b[n:attrLen])
 		case UR_VOLUME_MEASUREMENT:
-			volMeasurement, err := decodeVolumeMeasurement(b[n:int(hdr.Len)])
+			volMeasurement, err := decodeVolumeMeasurement(b[n:attrLen])
 			if err != nil {
 				return nil, err
 			}
 			report.VolMeasurement = volMeasurement
 		case UR_START_TIME:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			report.StartTime = time.Unix(0, int64(v))
 		case UR_END_TIME:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			report.EndTime = time.Unix(0, int64(v))
 		case UR_SEID:
-			report.SEID = native.Uint64(b[n:])
+			report.SEID = native.Uint64(b[n:attrLen])
 		}
 
 		b = b[hdr.Len.Align():]

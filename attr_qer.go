@@ -38,25 +38,26 @@ func DecodeQER(b []byte) (*QER, error) {
 		if err != nil {
 			return nil, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case QER_ID:
-			qer.ID = native.Uint32(b[n:])
+			qer.ID = native.Uint32(b[n:attrLen])
 		case QER_GATE:
 			qer.Gate = b[n]
 		case QER_MBR:
-			mbr, err := DecodeMBR(b[n:])
+			mbr, err := DecodeMBR(b[n:attrLen])
 			if err != nil {
 				return nil, err
 			}
 			qer.MBR = mbr
 		case QER_GBR:
-			gbr, err := DecodeGBR(b[n:])
+			gbr, err := DecodeGBR(b[n:attrLen])
 			if err != nil {
 				return nil, err
 			}
 			qer.GBR = gbr
 		case QER_CORR_ID:
-			qer.CorrID = native.Uint32(b[n:])
+			qer.CorrID = native.Uint32(b[n:attrLen])
 		case QER_RQI:
 			qer.RQI = b[n]
 		case QER_QFI:
@@ -64,14 +65,14 @@ func DecodeQER(b []byte) (*QER, error) {
 		case QER_PPI:
 			qer.PPI = b[n]
 		case QER_RELATED_TO_PDR:
-			d := b[n:hdr.Len]
+			d := b[n:attrLen]
 			for len(d) > 0 {
 				v := native.Uint16(d)
 				qer.PDRIDs = append(qer.PDRIDs, v)
 				d = d[2:]
 			}
 		case QER_SEID:
-			v := native.Uint64(b[n:])
+			v := native.Uint64(b[n:attrLen])
 			qer.SEID = &v
 		}
 		b = b[hdr.Len.Align():]
@@ -102,13 +103,14 @@ func DecodeMBR(b []byte) (MBR, error) {
 		if err != nil {
 			return mbr, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case QER_MBR_UL_HIGH32:
-			mbr.ULHigh = native.Uint32(b[n:])
+			mbr.ULHigh = native.Uint32(b[n:attrLen])
 		case QER_MBR_UL_LOW8:
 			mbr.ULLow = b[n]
 		case QER_MBR_DL_HIGH32:
-			mbr.DLHigh = native.Uint32(b[n:])
+			mbr.DLHigh = native.Uint32(b[n:attrLen])
 		case QER_MBR_DL_LOW8:
 			mbr.DLLow = b[n]
 		}
@@ -144,13 +146,14 @@ func DecodeGBR(b []byte) (GBR, error) {
 		if err != nil {
 			return gbr, err
 		}
+		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
 		case QER_GBR_UL_HIGH32:
-			gbr.ULHigh = native.Uint32(b[n:])
+			gbr.ULHigh = native.Uint32(b[n:attrLen])
 		case QER_GBR_UL_LOW8:
 			gbr.ULLow = b[n]
 		case QER_GBR_DL_HIGH32:
-			gbr.DLHigh = native.Uint32(b[n:])
+			gbr.DLHigh = native.Uint32(b[n:attrLen])
 		case QER_GBR_DL_LOW8:
 			gbr.DLLow = b[n]
 		}
