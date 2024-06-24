@@ -7,6 +7,34 @@ import (
 	"github.com/khirono/go-nl"
 )
 
+/* for UPF UL/DL Report*/
+const (
+	UPLINK_VOL_RX = iota + 1
+	UPLINK_VOL_TX
+	DOWNLINK_VOL_RX
+	DOWNLINK_VOL_TX
+
+	UPLINK_PKT_RX
+	UPLINK_PKT_TX
+	DOWNLINK_PKT_RX
+	DOWNLINK_PKT_TX
+)
+
+type ULDLReport struct {
+	TotalVolRx    uint64
+	TotalVolTx    uint64
+	UpLinkVolRx   uint64
+	UpLinkVolTx   uint64
+	DownLinkVolRx uint64
+	DownLinkVolTx uint64
+	TotalPktRx    uint64
+	TotalPktTx    uint64
+	UpLinkPktRx   uint64
+	UpLinkPktTx   uint64
+	DownLinkPktRx uint64
+	DownLinkPktTx uint64
+}
+
 const (
 	UR = iota + 5
 )
@@ -149,6 +177,48 @@ func decodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 		b = b[hdr.Len.Align():]
 	}
 	return VolMeasurement, nil
+}
+
+func DecodeULDLReport(b []byte) (*ULDLReport, error) {
+	uldlReport := new(ULDLReport)
+
+	for len(b) > 0 {
+		hdr, n, err := nl.DecodeAttrHdr(b)
+		if err != nil {
+			return nil, err
+		}
+		attrLen := int(hdr.Len)
+		switch hdr.MaskedType() {
+		case UPLINK_VOL_RX:
+			uldlReport.UpLinkVolRx = native.Uint64(b[n:attrLen])
+		case UPLINK_VOL_TX:
+			uldlReport.UpLinkVolTx = native.Uint64(b[n:attrLen])
+		case DOWNLINK_VOL_RX:
+			uldlReport.DownLinkVolRx = native.Uint64(b[n:attrLen])
+		case DOWNLINK_VOL_TX:
+			uldlReport.DownLinkVolTx = native.Uint64(b[n:attrLen])
+		case UPLINK_PKT_RX:
+			uldlReport.UpLinkPktRx = native.Uint64(b[n:attrLen])
+		case UPLINK_PKT_TX:
+			uldlReport.UpLinkPktTx = native.Uint64(b[n:attrLen])
+		case DOWNLINK_PKT_RX:
+			uldlReport.DownLinkPktRx = native.Uint64(b[n:attrLen])
+		case DOWNLINK_PKT_TX:
+			uldlReport.DownLinkPktTx = native.Uint64(b[n:attrLen])
+		}
+
+		b = b[hdr.Len.Align():]
+	}
+
+	// total volume count
+	uldlReport.TotalVolRx = uldlReport.UpLinkVolRx + uldlReport.DownLinkVolRx
+	uldlReport.TotalVolTx = uldlReport.UpLinkVolTx + uldlReport.DownLinkVolTx
+
+	// total packet count
+	uldlReport.TotalPktRx = uldlReport.UpLinkPktRx + uldlReport.DownLinkPktRx
+	uldlReport.TotalPktTx = uldlReport.UpLinkPktTx + uldlReport.DownLinkPktTx
+
+	return uldlReport, nil
 }
 
 func DecodeAllUSAReports(b []byte) ([]USAReport, error) {

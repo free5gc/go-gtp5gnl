@@ -78,6 +78,7 @@ const (
 	PDI_UE_ADDR_IPV4 = iota + 1
 	PDI_F_TEID
 	PDI_SDF_FILTER
+	PDI_SRC_INTF
 )
 
 type PDI struct {
