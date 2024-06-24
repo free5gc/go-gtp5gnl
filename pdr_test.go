@@ -85,6 +85,10 @@ func TestCreatePDR(t *testing.T) {
 				},
 			},
 		},
+		{
+			Type:  PDR_PDN_TYPE,
+			Value: nl.AttrU8(1),
+		},
 	}
 
 	err = CreatePDR(c, link, 2, attrs)
