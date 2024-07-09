@@ -66,7 +66,7 @@ const (
 	FORWARDING_PARAMETER_OUTER_HEADER_CREATION = iota + 1
 	FORWARDING_PARAMETER_FORWARDING_POLICY
 	FORWARDING_PARAMETER_PFCPSM_REQ_FLAGS
-	FORWARDING_PARAMETER_TRANSPORT_LEVEL_MARKING
+	FORWARDING_PARAMETER_TOS_TC
 )
 
 type ForwardParam struct {
@@ -93,7 +93,7 @@ func DecodeForwardParam(b []byte) (ForwardParam, error) {
 		case FORWARDING_PARAMETER_FORWARDING_POLICY:
 			s, _, _ := nl.DecodeAttrString(b[n:attrLen])
 			param.Policy = &s
-		case FORWARDING_PARAMETER_TRANSPORT_LEVEL_MARKING:
+		case FORWARDING_PARAMETER_TOS_TC:
 			param.TosTc = b[n]
 		}
 		b = b[hdr.Len.Align():]
