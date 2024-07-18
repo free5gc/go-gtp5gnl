@@ -7,32 +7,32 @@ import (
 	"github.com/khirono/go-nl"
 )
 
-/* for UPF UL/DL Report*/
+// for UPF Usage Statistic
 const (
-	UPLINK_VOL_RX = iota + 1
-	UPLINK_VOL_TX
-	DOWNLINK_VOL_RX
-	DOWNLINK_VOL_TX
+	USTAT_UL_VOL_RX = iota + 1
+	USTAT_UL_VOL_TX
+	USTAT_DL_VOL_RX
+	USTAT_DL_VOL_TX
 
-	UPLINK_PKT_RX
-	UPLINK_PKT_TX
-	DOWNLINK_PKT_RX
-	DOWNLINK_PKT_TX
+	USTAT_UL_PKT_RX
+	USTAT_UL_PKT_TX
+	USTAT_DL_PKT_RX
+	USTAT_DL_PKT_TX
 )
 
-type ULDLReport struct {
-	TotalVolRx    uint64
-	TotalVolTx    uint64
-	UpLinkVolRx   uint64
-	UpLinkVolTx   uint64
-	DownLinkVolRx uint64
-	DownLinkVolTx uint64
-	TotalPktRx    uint64
-	TotalPktTx    uint64
-	UpLinkPktRx   uint64
-	UpLinkPktTx   uint64
-	DownLinkPktRx uint64
-	DownLinkPktTx uint64
+type UsageStatistic struct {
+	TotalVolRx uint64
+	TotalVolTx uint64
+	UlVolRx    uint64
+	UlVolTx    uint64
+	DlVolRx    uint64
+	DlVolTx    uint64
+	TotalPktRx uint64
+	TotalPktTx uint64
+	UlPktRx    uint64
+	UlPktTx    uint64
+	DlPktRx    uint64
+	DlPktTx    uint64
 }
 
 const (
@@ -179,8 +179,8 @@ func decodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 	return VolMeasurement, nil
 }
 
-func DecodeULDLReport(b []byte) (*ULDLReport, error) {
-	uldlReport := new(ULDLReport)
+func DecodeUsageStatistic(b []byte) (*UsageStatistic, error) {
+	ustat := new(UsageStatistic)
 
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
@@ -189,36 +189,36 @@ func DecodeULDLReport(b []byte) (*ULDLReport, error) {
 		}
 		attrLen := int(hdr.Len)
 		switch hdr.MaskedType() {
-		case UPLINK_VOL_RX:
-			uldlReport.UpLinkVolRx = native.Uint64(b[n:attrLen])
-		case UPLINK_VOL_TX:
-			uldlReport.UpLinkVolTx = native.Uint64(b[n:attrLen])
-		case DOWNLINK_VOL_RX:
-			uldlReport.DownLinkVolRx = native.Uint64(b[n:attrLen])
-		case DOWNLINK_VOL_TX:
-			uldlReport.DownLinkVolTx = native.Uint64(b[n:attrLen])
-		case UPLINK_PKT_RX:
-			uldlReport.UpLinkPktRx = native.Uint64(b[n:attrLen])
-		case UPLINK_PKT_TX:
-			uldlReport.UpLinkPktTx = native.Uint64(b[n:attrLen])
-		case DOWNLINK_PKT_RX:
-			uldlReport.DownLinkPktRx = native.Uint64(b[n:attrLen])
-		case DOWNLINK_PKT_TX:
-			uldlReport.DownLinkPktTx = native.Uint64(b[n:attrLen])
+		case USTAT_UL_VOL_RX:
+			ustat.UlVolRx = native.Uint64(b[n:attrLen])
+		case USTAT_UL_VOL_TX:
+			ustat.UlVolTx = native.Uint64(b[n:attrLen])
+		case USTAT_DL_VOL_RX:
+			ustat.DlVolRx = native.Uint64(b[n:attrLen])
+		case USTAT_DL_VOL_TX:
+			ustat.DlVolTx = native.Uint64(b[n:attrLen])
+		case USTAT_UL_PKT_RX:
+			ustat.UlPktRx = native.Uint64(b[n:attrLen])
+		case USTAT_UL_PKT_TX:
+			ustat.UlPktTx = native.Uint64(b[n:attrLen])
+		case USTAT_DL_PKT_RX:
+			ustat.DlPktRx = native.Uint64(b[n:attrLen])
+		case USTAT_DL_PKT_TX:
+			ustat.DlPktTx = native.Uint64(b[n:attrLen])
 		}
 
 		b = b[hdr.Len.Align():]
 	}
 
 	// total volume count
-	uldlReport.TotalVolRx = uldlReport.UpLinkVolRx + uldlReport.DownLinkVolRx
-	uldlReport.TotalVolTx = uldlReport.UpLinkVolTx + uldlReport.DownLinkVolTx
+	ustat.TotalVolRx = ustat.UlVolRx + ustat.DlVolRx
+	ustat.TotalVolTx = ustat.UlVolTx + ustat.DlVolTx
 
 	// total packet count
-	uldlReport.TotalPktRx = uldlReport.UpLinkPktRx + uldlReport.DownLinkPktRx
-	uldlReport.TotalPktTx = uldlReport.UpLinkPktTx + uldlReport.DownLinkPktTx
+	ustat.TotalPktRx = ustat.UlPktRx + ustat.DlPktRx
+	ustat.TotalPktTx = ustat.UlPktTx + ustat.DlPktTx
 
-	return uldlReport, nil
+	return ustat, nil
 }
 
 func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
