@@ -12,6 +12,39 @@ func GetReport(c *Client, link *Link, urrid uint64, seid uint64) ([]USAReport, e
 	return GetReportOID(c, link, OID{uint64(urrid), seid})
 }
 
+func GetUsageStatistic(c *Client, link *Link) (*UsageStatistic, error) {
+	flags := syscall.NLM_F_ACK
+	req := nl.NewRequest(c.ID, flags)
+
+	err := req.Append(genl.Header{Cmd: CMD_GET_USAGE_STATISTIC})
+	if err != nil {
+		return nil, err
+	}
+
+	err = req.Append(nl.AttrList{
+		{
+			Type:  LINK,
+			Value: nl.AttrU32(link.Index),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	rsps, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if len(rsps) < 1 {
+		return nil, fmt.Errorf("nil Usage Statistic")
+	}
+	ustat, err := DecodeUsageStatistic(rsps[0].Body[genl.SizeofHeader:])
+	if err != nil {
+		return nil, err
+	}
+	return ustat, err
+}
+
 func GetReportOID(c *Client, link *Link, oid OID) ([]USAReport, error) {
 	flags := syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)

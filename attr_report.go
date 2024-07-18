@@ -7,6 +7,34 @@ import (
 	"github.com/khirono/go-nl"
 )
 
+// for UPF Usage Statistic
+const (
+	USTAT_UL_VOL_RX = iota + 1
+	USTAT_UL_VOL_TX
+	USTAT_DL_VOL_RX
+	USTAT_DL_VOL_TX
+
+	USTAT_UL_PKT_RX
+	USTAT_UL_PKT_TX
+	USTAT_DL_PKT_RX
+	USTAT_DL_PKT_TX
+)
+
+type UsageStatistic struct {
+	TotalVolRx uint64
+	TotalVolTx uint64
+	UlVolRx    uint64
+	UlVolTx    uint64
+	DlVolRx    uint64
+	DlVolTx    uint64
+	TotalPktRx uint64
+	TotalPktTx uint64
+	UlPktRx    uint64
+	UlPktTx    uint64
+	DlPktRx    uint64
+	DlPktTx    uint64
+}
+
 const (
 	UR = iota + 5
 )
@@ -149,6 +177,48 @@ func decodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 		b = b[hdr.Len.Align():]
 	}
 	return VolMeasurement, nil
+}
+
+func DecodeUsageStatistic(b []byte) (*UsageStatistic, error) {
+	ustat := new(UsageStatistic)
+
+	for len(b) > 0 {
+		hdr, n, err := nl.DecodeAttrHdr(b)
+		if err != nil {
+			return nil, err
+		}
+		attrLen := int(hdr.Len)
+		switch hdr.MaskedType() {
+		case USTAT_UL_VOL_RX:
+			ustat.UlVolRx = native.Uint64(b[n:attrLen])
+		case USTAT_UL_VOL_TX:
+			ustat.UlVolTx = native.Uint64(b[n:attrLen])
+		case USTAT_DL_VOL_RX:
+			ustat.DlVolRx = native.Uint64(b[n:attrLen])
+		case USTAT_DL_VOL_TX:
+			ustat.DlVolTx = native.Uint64(b[n:attrLen])
+		case USTAT_UL_PKT_RX:
+			ustat.UlPktRx = native.Uint64(b[n:attrLen])
+		case USTAT_UL_PKT_TX:
+			ustat.UlPktTx = native.Uint64(b[n:attrLen])
+		case USTAT_DL_PKT_RX:
+			ustat.DlPktRx = native.Uint64(b[n:attrLen])
+		case USTAT_DL_PKT_TX:
+			ustat.DlPktTx = native.Uint64(b[n:attrLen])
+		}
+
+		b = b[hdr.Len.Align():]
+	}
+
+	// total volume count
+	ustat.TotalVolRx = ustat.UlVolRx + ustat.DlVolRx
+	ustat.TotalVolTx = ustat.UlVolTx + ustat.DlVolTx
+
+	// total packet count
+	ustat.TotalPktRx = ustat.UlPktRx + ustat.DlPktRx
+	ustat.TotalPktTx = ustat.UlPktTx + ustat.DlPktTx
+
+	return ustat, nil
 }
 
 func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
