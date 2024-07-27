@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -105,6 +106,25 @@ func ParseFAROptions(args []string) ([]nl.Attr, error) {
 			paramv = append(paramv, nl.Attr{
 				Type:  gtp5gnl.FORWARDING_PARAMETER_FORWARDING_POLICY,
 				Value: nl.AttrString(arg),
+			})
+		case "--direction":
+			// --direction <dl|ul>
+			arg, ok := p.GetToken()
+			if !ok {
+				return attrs, fmt.Errorf("option requires argument %q", opt)
+			}
+			var v uint8
+			switch strings.ToLower(arg) {
+			case "dl":
+				v = 0
+			case "ul":
+				v = 0x10
+			default:
+				return attrs, fmt.Errorf("unknown argument %s, expected 'ul' or 'dl'", arg)
+			}
+			attrs = append(attrs, nl.Attr{
+				Type:  gtp5gnl.FAR_UL_OR_DL,
+				Value: nl.AttrU8(v),
 			})
 		default:
 			return attrs, fmt.Errorf("unknown option %q", opt)
