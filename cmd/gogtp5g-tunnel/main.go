@@ -37,6 +37,7 @@ FAR Options:
     --action <apply-action>
     --hdr-creation <description> <o-teid> <peer-ipv4> <peer-port>
     --fwd-policy <mark set in iptable>
+    --direction <dl|ul>
 
 QER Options:
     --gate-status <gate-status>
