@@ -18,6 +18,7 @@ const (
 	PDR_QER_ID
 	PDR_SEID
 	PDR_URR_ID
+	PDR_PDN_TYPE
 )
 
 type PDR struct {
@@ -29,6 +30,7 @@ type PDR struct {
 	QERID           []uint32
 	URRID           []uint32
 	SEID            *uint64
+	PDNType         *uint8
 }
 
 func DecodePDR(b []byte) (*PDR, error) {
@@ -66,6 +68,9 @@ func DecodePDR(b []byte) (*PDR, error) {
 		case PDR_SEID:
 			v := native.Uint64(b[n:attrLen])
 			pdr.SEID = &v
+		case PDR_PDN_TYPE:
+			v := uint8(b[n])
+			pdr.PDNType = &v
 		default:
 			log.Printf("unknown type: %v\n", hdr.Type)
 		}
@@ -79,12 +84,14 @@ const (
 	PDI_F_TEID
 	PDI_SDF_FILTER
 	PDI_SRC_INTF
+	PDI_ETHERNET_PACKET_FILTER
 )
 
 type PDI struct {
 	UEAddr net.IP
 	FTEID  *FTEID
 	SDF    *SDFFilter
+	EPF    []EthPktFilter
 }
 
 func DecodePDI(b []byte) (PDI, error) {
@@ -111,6 +118,12 @@ func DecodePDI(b []byte) (PDI, error) {
 				return pdi, err
 			}
 			pdi.SDF = &sdf
+		case PDI_ETHERNET_PACKET_FILTER:
+			epf, err := DecodeEthPktFilter(b[n:attrLen])
+			if err != nil {
+				return pdi, err
+			}
+			pdi.EPF = append(pdi.EPF, epf)
 		}
 		b = b[hdr.Len.Align():]
 	}
@@ -288,4 +301,93 @@ func DecodeFlowDesc(b []byte) (FlowDesc, error) {
 		b = b[hdr.Len.Align():]
 	}
 	return fd, nil
+}
+
+const (
+	EPF_FILTER_ETHERNET_FILTER_ID = iota + 1
+	EPF_FILTER_ETHERNET_FILTER_Properties
+	EPF_FILTER_MACADDRESS
+	EPF_FILTER_ETHERTYPE
+	EPF_FILTER_CTAG
+	EPF_FILTER_STAG
+	EPF_FILTER_SDF_FILTER
+)
+
+type EthPktFilter struct {
+	EthFilterID *uint32
+	MACAddrs    []MACAddrFields
+	Ethertype   *uint16
+}
+
+const (
+	MACADDRESS_SRC = iota + 1
+	MACADDRESS_DST
+	MACADDRESS_UPPER_SRC
+	MACADDRESS_UPPER_DST
+)
+
+type MACAddrFields struct {
+	SourceMACAddress           string
+	DestinationMACAddress      string
+	UpperSourceMACAddress      string
+	UpperDestinationMACAddress string
+}
+
+func DecodeMACAddrFields(b []byte) (MACAddrFields, error) {
+	var macAddrFields MACAddrFields
+	var macAddr net.HardwareAddr = make([]byte, 6)
+	for len(b) > 0 {
+		hdr, n, err := nl.DecodeAttrHdr(b)
+		if err != nil {
+			return macAddrFields, err
+		}
+		attrLen := int(hdr.Len)
+		switch hdr.MaskedType() {
+		case MACADDRESS_SRC:
+			copy(macAddr, b[n:attrLen])
+			macAddrFields.SourceMACAddress = macAddr.String()
+		case MACADDRESS_DST:
+			copy(macAddr, b[n:attrLen])
+			macAddrFields.DestinationMACAddress = macAddr.String()
+		case MACADDRESS_UPPER_SRC:
+			copy(macAddr, b[n:attrLen])
+			macAddrFields.UpperSourceMACAddress = macAddr.String()
+		case MACADDRESS_UPPER_DST:
+			copy(macAddr, b[n:attrLen])
+			macAddrFields.UpperDestinationMACAddress = macAddr.String()
+		default:
+			log.Printf("unknown type: %v\n", hdr.Type)
+		}
+		b = b[hdr.Len.Align():]
+	}
+	return macAddrFields, nil
+}
+
+func DecodeEthPktFilter(b []byte) (EthPktFilter, error) {
+	var epf EthPktFilter
+	for len(b) > 0 {
+		hdr, n, err := nl.DecodeAttrHdr(b)
+		if err != nil {
+			return epf, err
+		}
+		attrLen := int(hdr.Len)
+		switch hdr.MaskedType() {
+		case EPF_FILTER_ETHERNET_FILTER_ID:
+			v := native.Uint32(b[n:attrLen])
+			epf.EthFilterID = &v
+		case EPF_FILTER_MACADDRESS:
+			macAddrFields, err := DecodeMACAddrFields(b[n:attrLen])
+			if err != nil {
+				return epf, err
+			}
+			epf.MACAddrs = append(epf.MACAddrs, macAddrFields)
+		case EPF_FILTER_ETHERTYPE:
+			v := native.Uint16(b[n:attrLen])
+			epf.Ethertype = &v
+		default:
+			log.Printf("unknown type: %v\n", hdr.Type)
+		}
+		b = b[hdr.Len.Align():]
+	}
+	return epf, nil
 }
