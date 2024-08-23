@@ -69,7 +69,7 @@ func DecodePDR(b []byte) (*PDR, error) {
 			v := native.Uint64(b[n:attrLen])
 			pdr.SEID = &v
 		case PDR_PDN_TYPE:
-			v := uint8(b[n])
+			v := b[n]
 			pdr.PDNType = &v
 		default:
 			log.Printf("unknown type: %v\n", hdr.Type)
@@ -88,10 +88,11 @@ const (
 )
 
 type PDI struct {
-	UEAddr net.IP
-	FTEID  *FTEID
-	SDF    *SDFFilter
-	EPF    []EthPktFilter
+	SrcIntf *uint8
+	UEAddr  net.IP
+	FTEID   *FTEID
+	SDF     *SDFFilter
+	EPF     []EthPktFilter
 }
 
 func DecodePDI(b []byte) (PDI, error) {
@@ -124,6 +125,9 @@ func DecodePDI(b []byte) (PDI, error) {
 				return pdi, err
 			}
 			pdi.EPF = append(pdi.EPF, epf)
+		case PDI_SRC_INTF:
+			v := b[n]
+			pdi.SrcIntf = &v
 		}
 		b = b[hdr.Len.Align():]
 	}

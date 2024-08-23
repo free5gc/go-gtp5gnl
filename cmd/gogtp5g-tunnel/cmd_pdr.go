@@ -231,6 +231,35 @@ func ParsePDROptions(args []string) ([]nl.Attr, error) {
 				Type:  gtp5gnl.PDR_UNIX_SOCKET_PATH,
 				Value: nl.AttrString(arg),
 			})
+		case "--src-intf":
+			// --src-intf <src-intf>
+			// 0: SRC_INTF_ACCESS, 1: SRC_INTF_CORE
+			arg, ok := p.GetToken()
+			if !ok {
+				return attrs, fmt.Errorf("option requires argument %q", opt)
+			}
+			v, err := strconv.ParseUint(arg, 0, 8)
+			if err != nil {
+				return attrs, err
+			}
+			pdiv = append(pdiv, nl.Attr{
+				Type:  gtp5gnl.PDI_SRC_INTF,
+				Value: nl.AttrU8(v),
+			})
+		case "--pdn-type":
+			// --pdn-type <pdn-type>
+			arg, ok := p.GetToken()
+			if !ok {
+				return attrs, fmt.Errorf("option requires argument %q", opt)
+			}
+			v, err := strconv.ParseUint(arg, 0, 8)
+			if err != nil {
+				return attrs, err
+			}
+			attrs = append(attrs, nl.Attr{
+				Type:  gtp5gnl.PDR_PDN_TYPE,
+				Value: nl.AttrU8(v),
+			})
 		default:
 			return attrs, fmt.Errorf("unknown option %q", opt)
 		}
