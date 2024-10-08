@@ -9,6 +9,7 @@ const (
 	IFLA_FD1
 	IFLA_HASHSIZE
 	IFLA_ROLE
+	IFLA_ETHERNET_N6_DEV
 )
 
 type Link struct {
