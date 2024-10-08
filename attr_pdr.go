@@ -92,7 +92,7 @@ type PDI struct {
 	UEAddr  net.IP
 	FTEID   *FTEID
 	SDF     *SDFFilter
-	EPF     []EthPktFilter
+	EPFs    []EthPktFilter
 }
 
 func DecodePDI(b []byte) (PDI, error) {
@@ -124,7 +124,7 @@ func DecodePDI(b []byte) (PDI, error) {
 			if err != nil {
 				return pdi, err
 			}
-			pdi.EPF = append(pdi.EPF, epf)
+			pdi.EPFs = append(pdi.EPFs, epf)
 		case PDI_SRC_INTF:
 			v := b[n]
 			pdi.SrcIntf = &v
@@ -309,7 +309,7 @@ func DecodeFlowDesc(b []byte) (FlowDesc, error) {
 
 const (
 	EPF_FILTER_ETHERNET_FILTER_ID = iota + 1
-	EPF_FILTER_ETHERNET_FILTER_Properties
+	EPF_FILTER_ETHERNET_FILTER_PROPERTIES
 	EPF_FILTER_MACADDRESS
 	EPF_FILTER_ETHERTYPE
 	EPF_FILTER_CTAG
