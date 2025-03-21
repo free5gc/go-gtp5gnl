@@ -1,4 +1,4 @@
-package main
+package tuncmd
 
 import (
 	"encoding/json"
@@ -20,7 +20,7 @@ func ParseURROptions(args []string) ([]nl.Attr, error) {
 			break
 		}
 		switch opt {
-		//TODO:
+		// TODO:
 		}
 	}
 

@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/free5gc/go-gtp5gnl/tuncmd"
 )
 
 func usage(prog string) {
@@ -58,7 +60,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cmd, args := CmdTree.Find(os.Args[1:])
+	cmd, args := tuncmd.CmdTree.Find(os.Args[1:])
 	if cmd == nil {
 		fmt.Fprintf(os.Stderr, "%v: unknown command %q\n", prog, strings.Join(os.Args[1:], " "))
 		os.Exit(1)
