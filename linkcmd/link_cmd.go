@@ -1,7 +1,6 @@
 package linkcmd
 
 import (
-	"fmt"
 	"net"
 	"sync"
 	"syscall"
@@ -44,6 +43,18 @@ func CmdDel(ifname string) error {
 }
 
 func CmdAdd(ifname string, role int) error {
+	stopChan := make(chan bool)
+	return CmdAddWithStopCh(ifname, role, 131072, "", "", stopChan)
+}
+
+func CmdAddWithStopCh(
+	ifname string,
+	role int,
+	hashSize int,
+	ipAddr string,
+	ethDev string,
+	stopChan chan bool,
+) error {
 	var wg sync.WaitGroup
 	mux, err := nl.NewMux()
 	if err != nil {
@@ -67,7 +78,7 @@ func CmdAdd(ifname string, role int) error {
 
 	c := nl.NewClient(conn, mux)
 
-	laddr, err := net.ResolveUDPAddr("udp4", ":2152")
+	laddr, err := net.ResolveUDPAddr("udp4", ipAddr+":2152")
 	if err != nil {
 		return err
 	}
@@ -82,6 +93,29 @@ func CmdAdd(ifname string, role int) error {
 	}
 	defer f.Close()
 
+	infoDataVal := nl.AttrList{
+		{
+			Type:  gtp5gnl.IFLA_FD1,
+			Value: nl.AttrU32(f.Fd()),
+		},
+		{
+			Type:  gtp5gnl.IFLA_HASHSIZE,
+			Value: nl.AttrU32(hashSize),
+		},
+		{
+			Type:  gtp5gnl.IFLA_ROLE,
+			Value: nl.AttrU32(role),
+		},
+	}
+	if ethDev != "" {
+		infoDataVal = append(infoDataVal,
+			nl.Attr{
+				Type:  gtp5gnl.IFLA_ETHERNET_N6_DEV,
+				Value: nl.AttrString(ethDev),
+			},
+		)
+	}
+
 	linkinfo := &nl.Attr{
 		Type: syscall.IFLA_LINKINFO,
 		Value: nl.AttrList{
@@ -90,21 +124,8 @@ func CmdAdd(ifname string, role int) error {
 				Value: nl.AttrString("gtp5g"),
 			},
 			{
-				Type: rtnllink.IFLA_INFO_DATA,
-				Value: nl.AttrList{
-					{
-						Type:  gtp5gnl.IFLA_FD1,
-						Value: nl.AttrU32(f.Fd()),
-					},
-					{
-						Type:  gtp5gnl.IFLA_HASHSIZE,
-						Value: nl.AttrU32(131072),
-					},
-					{
-						Type:  gtp5gnl.IFLA_ROLE,
-						Value: nl.AttrU32(role),
-					},
-				},
+				Type:  rtnllink.IFLA_INFO_DATA,
+				Value: infoDataVal,
 			},
 		},
 	}
@@ -118,14 +139,7 @@ func CmdAdd(ifname string, role int) error {
 		return err
 	}
 
-	b := make([]byte, 96*1024)
-	for {
-		n, from, err := conn2.ReadFrom(b)
-		if err != nil {
-			break
-		}
-		fmt.Printf("received %v bytes from %v.\n", n, from)
-	}
+	<-stopChan
 
 	return nil
 }
