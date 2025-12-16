@@ -1,6 +1,6 @@
 module github.com/free5gc/go-gtp5gnl
 
-go 1.17
+go 1.25.5
 
 require (
 	github.com/khirono/go-genl v1.0.1
