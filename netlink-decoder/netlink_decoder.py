@@ -4,7 +4,7 @@
 GTP5G Netlink Decoder 
 
 Parses strace -xx output to decode GTP5G Generic Netlink messages.
-Usage: sudo strace -f -e trace=sendmsg,recvmsg -xx -s 65535 -p <UPF_PID> 2>&1 | python3 gtp5g_netlink_decoder.py
+Usage: sudo strace -f -e trace=sendmsg,recvmsg -xx -s 65535 -p <UPF_PID> 2>&1 | python3 netlink_decoder.py
 """
 
 import sys
