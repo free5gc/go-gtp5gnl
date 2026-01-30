@@ -1,0 +1,5 @@
+cmd/gogtp5g-link/gogtp5g-link
+cmd/gogtp5g-tunnel/gogtp5g-tunnel
+
+example/gogtp5g-link
+example/gogtp5g-tunnel
