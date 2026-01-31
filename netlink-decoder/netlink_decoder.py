@@ -11,6 +11,7 @@ import sys
 import re
 import struct
 import subprocess
+import traceback
 
 # ==========================================
 # 1. GTP5G Protocol Constants
@@ -249,8 +250,6 @@ GTP5G_FLOW_DESCRIPTION_ATTRS = {
     9: "GTP5G_FLOW_DESCRIPTION_DEST_PORT",
 }
 
-CURRENT_GTP5G_FAMILY_ID = None
-
 # ==========================================
 # 2. Utility Functions
 # ==========================================
@@ -272,15 +271,19 @@ def get_gtp5g_family_id():
         for line in lines:
             if "Name: gtp5g" in line:
                 found_name = True
-            elif found_name and "ID:" in line:
-                match = re.search(r'ID:\s+(0x[0-9a-fA-F]+)', line)
-                if match:
-                    hex_id = match.group(1)
-                    fam_id = int(hex_id, 16)
-                    print(f"[Init] Detected gtp5g Family ID: {fam_id} ({hex_id})")
-                    return fam_id
-            if found_name and "Name:" in line:
-                break
+                continue
+            if found_name:
+                # Check for ID on subsequent lines
+                if "ID:" in line:
+                    match = re.search(r'ID:\s+(0x[0-9a-fA-F]+)', line)
+                    if match:
+                        hex_id = match.group(1)
+                        fam_id = int(hex_id, 16)
+                        print(f"[Init] Detected gtp5g Family ID: {fam_id} ({hex_id})")
+                        return fam_id
+                # Stop if we hit another Name: entry (different family)
+                if "Name:" in line and "Name: gtp5g" not in line:
+                    break
 
         match = re.search(r'Name:\s+gtp5g\s+ID:\s+(0x[0-9a-fA-F]+)', result.stdout)
         if match:
@@ -404,8 +407,8 @@ def decode_value(attr_name, data):
                          "GTP5G_SDF_FILTER_FLOW_DESCRIPTION"]:
             return data.decode('utf-8', errors='ignore').rstrip('\x00')
     
-    except Exception:
-        pass
+    except (struct.error, ValueError) as e:
+        print(f"[Decode] Warning: Failed to decode attribute {attr_name}: {e}", file=sys.stderr)
     
     # Fallback: return hex string for unknown types
     return "0x" + data.hex() if data else "(empty)"
@@ -508,66 +511,163 @@ def format_attrs(attrs, indent=0):
 # 3. Main Processing Logic
 # ==========================================
 
-def process_line(line):
+# Netlink message flags mapping
+NLM_FLAGS = {
+    'NLM_F_REQUEST': 0x01,
+    'NLM_F_MULTI': 0x02,
+    'NLM_F_ACK': 0x04,
+    'NLM_F_ECHO': 0x08,
+    'NLM_F_DUMP_INTR': 0x10,
+    'NLM_F_DUMP_FILTERED': 0x20,
+    # GET request flags
+    'NLM_F_ROOT': 0x100,
+    'NLM_F_MATCH': 0x200,
+    'NLM_F_ATOMIC': 0x400,
+    'NLM_F_DUMP': 0x300,  # NLM_F_ROOT | NLM_F_MATCH
+    # NEW request flags
+    'NLM_F_REPLACE': 0x100,
+    'NLM_F_EXCL': 0x200,
+    'NLM_F_CREATE': 0x400,
+    'NLM_F_APPEND': 0x800,
+}
+
+def parse_nlm_flags(flags_str):
+    """Parse Netlink message flags from strace output.
+    
+    Args:
+        flags_str: Flags string like "NLM_F_REQUEST|NLM_F_ACK|0x200" or "5"
+    
+    Returns:
+        Integer value of the combined flags
+    """
+    flags_str = flags_str.strip()
+    
+    # If it's a plain number, return it directly
+    if flags_str.isdigit():
+        return int(flags_str)
+    if flags_str.startswith('0x'):
+        return int(flags_str, 16)
+    
+    # Parse symbolic flags separated by |
+    total = 0
+    for part in flags_str.split('|'):
+        part = part.strip()
+        if part in NLM_FLAGS:
+            total |= NLM_FLAGS[part]
+        elif part.isdigit():
+            total |= int(part)
+        elif part.startswith('0x'):
+            total |= int(part, 16)
+        # Ignore unknown flags
+    
+    return total
+
+def parse_nlmsg_type(type_str):
+    """Parse Netlink message type from strace output.
+    
+    Args:
+        type_str: Type string like "0x7 /* NLMSG_??? */", "NLMSG_OVERRUN", or "31"
+    
+    Returns:
+        Integer value of the message type
+    """
+    type_str = type_str.strip()
+    
+    # Known symbolic types
+    if type_str == 'NLMSG_OVERRUN':
+        return 4
+    
+    # Check for hex or decimal with comment (e.g., "0x7 /* NLMSG_??? */")
+    if 'NLMSG_???' in type_str or 'GENERIC_FAMILY_???' in type_str:
+        hex_match = re.match(r'(0x[0-9a-fA-F]+|\d+)', type_str)
+        if hex_match:
+            val_str = hex_match.group(1)
+            return int(val_str, 16) if val_str.startswith('0x') else int(val_str)
+    
+    # Plain hex value
+    if type_str.startswith('0x'):
+        hex_match = re.match(r'0x([0-9a-fA-F]+)', type_str)
+        if hex_match:
+            return int(hex_match.group(1), 16)
+    
+    # Plain decimal
+    if type_str.isdigit():
+        return int(type_str)
+    
+    return 0
+
+def process_line(line, gtp5g_family_id):
     """Process a single line of strace output.
+    
+    Args:
+        line: A single line from strace output
+        gtp5g_family_id: The Generic Netlink family ID for gtp5g
     
     Extracts Netlink message from strace sendmsg/recvmsg output,
     parses the GTP5G Generic Netlink payload, and prints decoded attributes.
     """
     # Skip error responses and incomplete lines
-    if 'NLMSG_ERROR' in line or 'unfinished' in line.lower():
+    # Note: Only skip if NLMSG_ERROR is in first iov_base (actual error response)
+    # Don't skip if it's just in a nested structure
+    if 'NLMSG_ERROR' in line and 'type=NLMSG_ERROR' not in line:
+        # Check if NLMSG_ERROR is at the top level (not nested)
+        first_iov = re.search(r'msg_iov=\[\{iov_base=\{[^}]*type=NLMSG_ERROR', line)
+        if first_iov:
+            return
+    
+    if 'unfinished' in line.lower():
         return
     
     if 'sendmsg' not in line and 'recvmsg' not in line:
         return
     
-    # Extract Netlink message header fields
-    header_match = re.search(
-        r'iov_base=\{len=(\d+),\s*type=([^,]+),\s*flags=([^,]+),\s*seq=(\d+),\s*pid=(\d+)\}',
-        line
-    )
+    # Extract Netlink message header fields from the FIRST iov_base in msg_iov
+    # The first iov_base contains the netlink message header with type=gtp5g
+    # Pattern 1: Single brace format (first iov): msg_iov=[{iov_base={len=N, type=X, ...}
+    # Pattern 2: Double brace format: iov_base={{len=N, type=X, ...}, "..."}
+    # We need to match the FIRST iov_base, which is right after msg_iov=[
+    
+    # First try to find the first iov_base after msg_iov=[
+    first_iov_match = re.search(r'msg_iov=\[\{iov_base=\{len=(\d+),\s*type=([^,]+),\s*flags=([^,]+),\s*seq=(\d+),\s*pid=(\d+)\}', line)
+    
+    if first_iov_match:
+        header_match = first_iov_match
+    else:
+        # Fallback to double brace format
+        header_match = re.search(
+            r'msg_iov=\[\{iov_base=\{\{len=(\d+),\s*type=([^,]+),\s*flags=([^,]+),\s*seq=(\d+),\s*pid=(\d+)\}',
+            line
+        )
     
     if not header_match:
         return
     
     msg_len = int(header_match.group(1))
     msg_type_str = header_match.group(2).strip()
-    flags_str = header_match.group(3).strip()
     seq = int(header_match.group(4))
-    pid = int(header_match.group(5))
     
     # Parse message type (Generic Netlink family ID)
     if 'gtp5g' in msg_type_str:
-        msg_type = CURRENT_GTP5G_FAMILY_ID if CURRENT_GTP5G_FAMILY_ID else 31
+        msg_type = gtp5g_family_id
     else:
         type_match = re.search(r'0x([0-9a-fA-F]+)', msg_type_str)
         msg_type = int(type_match.group(1), 16) if type_match else 0
     
     # Filter out non-gtp5g messages
-    if CURRENT_GTP5G_FAMILY_ID and msg_type != CURRENT_GTP5G_FAMILY_ID:
+    if gtp5g_family_id and msg_type != gtp5g_family_id:
         return
-    
-    # Parse Netlink message flags
-    flags = 0
-    if 'NLM_F_REQUEST' in flags_str:
-        flags |= 0x0001
-    if 'NLM_F_ACK' in flags_str:
-        flags |= 0x0004
-    if '0x200' in flags_str:
-        flags |= 0x0200
-    if '0x100' in flags_str:
-        flags |= 0x0100
     
     # Extract payload data from iov_base fields in order of appearance
     # strace may output iov data in different formats depending on content
+    # Note: flags can be numeric (e.g., "5") or symbolic (e.g., "NLM_F_REQUEST|NLM_F_ACK")
     iov_patterns = [
         # Pattern 1: Simple hex string iov_base="\x..."
         (r'iov_base="((?:\\x[0-9a-fA-F]{2})+)"', 'hex'),
         # Pattern 2: Nested structure where strace decoded first 16 bytes as nlmsghdr
-        # Format: iov_base={{len=N, type=X, flags=N, seq=N, pid=N}, "\x..."}
-        (r'iov_base=\{\{len=(\d+),\s*type=([^,]+),\s*flags=(\d+),\s*seq=(\d+),\s*pid=(\d+)\},\s*"((?:\\x[0-9a-fA-F]{2})+)"\}', 'nested_full'),
+        # Format: iov_base={{len=N, type=X, flags=..., seq=N, pid=N}, "\x..."}
+        (r'iov_base=\{\{len=(\d+),\s*type=([^,]+),\s*flags=([^,]+),\s*seq=(\d+),\s*pid=(\d+)\},\s*"((?:\\x[0-9a-fA-F]{2})+)"\}', 'nested_full'),
         # Pattern 3: Standalone decoded nlmsghdr without trailing hex data
-        (r'iov_base=\{len=(\d+),\s*type=([^,]+),\s*flags=(\d+),\s*seq=(\d+),\s*pid=(\d+)\}(?!,\s*")', 'fake_header'),
+        (r'iov_base=\{len=(\d+),\s*type=([^,]+),\s*flags=([^,]+),\s*seq=(\d+),\s*pid=(\d+)\}(?!,\s*")', 'fake_header'),
     ]
     
     # Collect all iov data segments with their positions
@@ -575,10 +675,16 @@ def process_line(line):
     
     for pattern, ptype in iov_patterns:
         for match in re.finditer(pattern, line):
-            # Skip the real Netlink header (contains 'gtp5g' family name)
-            if ptype in ('fake_header', 'nested_full') and 'gtp5g' in match.group(0):
+            # For nested_full with gtp5g type, we only need the hex payload (GenL header + attrs)
+            # The nlmsghdr is already decoded by strace, so we don't need to rebuild it
+            if ptype == 'nested_full' and 'gtp5g' in match.group(2):
+                # Extract only the hex payload part
+                iov_items.append((match.start(), 'gtp5g_payload', match))
+            elif ptype in ('fake_header', 'nested_full') and 'gtp5g' in match.group(0):
+                # Skip other gtp5g headers that don't have hex payload
                 continue
-            iov_items.append((match.start(), ptype, match))
+            else:
+                iov_items.append((match.start(), ptype, match))
     
     # Sort by position to maintain correct byte order
     iov_items.sort(key=lambda x: x[0])
@@ -590,28 +696,18 @@ def process_line(line):
             if ptype == 'hex':
                 hex_str = match.group(1)
                 payload_bytes += bytes.fromhex(hex_str.replace('\\x', ''))
+            elif ptype == 'gtp5g_payload':
+                # For gtp5g type, strace already decoded nlmsghdr, hex is GenL header + attrs
+                hex_str = match.group(6)
+                payload_bytes += bytes.fromhex(hex_str.replace('\\x', ''))
             elif ptype == 'nested_full':
                 # Handle nested structure: rebuild the 16-byte header then append hex data
                 len_val = int(match.group(1))
-                type_str = match.group(2).strip()
-                flags_val = int(match.group(3))
+                type_val = parse_nlmsg_type(match.group(2))
+                flags_val = parse_nlm_flags(match.group(3))
                 seq_val = int(match.group(4))
                 pid_val = int(match.group(5))
                 hex_str = match.group(6)
-                
-                # Parse type value from various strace output formats
-                type_val = 0
-                if 'NLMSG_???' in type_str or 'GENERIC_FAMILY_???' in type_str:
-                    hex_match = re.match(r'(0x[0-9a-fA-F]+|\d+)', type_str)
-                    if hex_match:
-                        val_str = hex_match.group(1)
-                        type_val = int(val_str, 16) if val_str.startswith('0x') else int(val_str)
-                elif type_str.startswith('0x'):
-                    hex_match = re.match(r'0x([0-9a-fA-F]+)', type_str)
-                    if hex_match:
-                        type_val = int(hex_match.group(1), 16)
-                elif type_str.isdigit():
-                    type_val = int(type_str)
                 
                 # Rebuild 16-byte nlmsghdr structure
                 rebuilt = struct.pack("=I", len_val)
@@ -624,26 +720,10 @@ def process_line(line):
                 payload_bytes += bytes.fromhex(hex_str.replace('\\x', ''))
             elif ptype == 'fake_header':
                 len_val = int(match.group(1))
-                type_str = match.group(2).strip()
-                flags_val = int(match.group(3))
+                type_val = parse_nlmsg_type(match.group(2))
+                flags_val = parse_nlm_flags(match.group(3))
                 seq_val = int(match.group(4))
                 pid_val = int(match.group(5))
-                
-                # Parse type value from strace output
-                type_val = 0
-                if type_str == 'NLMSG_OVERRUN':
-                    type_val = 4  # NLMSG_OVERRUN = 4
-                elif 'NLMSG_???' in type_str or 'GENERIC_FAMILY_???' in type_str:
-                    hex_match = re.match(r'(0x[0-9a-fA-F]+|\d+)', type_str)
-                    if hex_match:
-                        val_str = hex_match.group(1)
-                        type_val = int(val_str, 16) if val_str.startswith('0x') else int(val_str)
-                elif type_str.startswith('0x'):
-                    hex_match = re.match(r'0x([0-9a-fA-F]+)', type_str)
-                    if hex_match:
-                        type_val = int(hex_match.group(1), 16)
-                elif type_str.isdigit():
-                    type_val = int(type_str)
                 
                 # Rebuild original 16-byte nlmsghdr structure
                 rebuilt = struct.pack("=I", len_val)
@@ -651,14 +731,15 @@ def process_line(line):
                 rebuilt += struct.pack("=I", seq_val)
                 rebuilt += struct.pack("=I", pid_val)
                 payload_bytes += rebuilt
-        except (ValueError, struct.error):
+        except (ValueError, struct.error) as e:
+            print(f"[Parse] Warning: Failed to parse iov item at pos={pos}, type={ptype}: {e}", file=sys.stderr)
             continue
     
     if len(payload_bytes) < 4:
         return
     
     # Parse Generic Netlink header (4 bytes: cmd, version, reserved)
-    cmd, version, reserved = struct.unpack("=BBH", payload_bytes[:4])
+    cmd, version, _ = struct.unpack("=BBH", payload_bytes[:4])
     cmd_str = GTP5G_CMDS.get(cmd, f"UNKNOWN_CMD_{cmd}")
     
     # Select attribute mapping based on command type
@@ -699,18 +780,26 @@ if __name__ == "__main__":
     sys.stdout.reconfigure(line_buffering=True)
     sys.stdin.reconfigure(line_buffering=True)
     
-    CURRENT_GTP5G_FAMILY_ID = get_gtp5g_family_id()
-    if CURRENT_GTP5G_FAMILY_ID is None:
+    family_id = get_gtp5g_family_id()
+    if family_id is None:
         print("[Warning] Could not detect gtp5g family ID, defaulting to 31")
-        CURRENT_GTP5G_FAMILY_ID = 31
+        family_id = 31
     
-    print(f"[Init] Decoder started. Target Family ID: {CURRENT_GTP5G_FAMILY_ID}")
+    print(f"[Init] Decoder started. Target Family ID: {family_id}")
     print("[Init] Waiting for strace input...")
     
+    current_line = None
+    line_count = 0
     try:
         for line in sys.stdin:
-            process_line(line)
+            line_count += 1
+            current_line = line
+            process_line(line, family_id)
     except KeyboardInterrupt:
-        print("\n[Exit] Decoder stopped")
+        print(f"\n[Exit] Decoder stopped. Processed {line_count} lines.")
     except Exception as e:
-        print(f"[Error] {e}")
+        print(f"[Error] Unexpected error: {e}", file=sys.stderr)
+        if current_line:
+            print(f"[Error] While processing line: {current_line[:200]}...", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(1)
