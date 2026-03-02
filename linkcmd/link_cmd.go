@@ -2,6 +2,7 @@ package linkcmd
 
 import (
 	"net"
+	"runtime"
 	"sync"
 	"syscall"
 
@@ -130,6 +131,8 @@ func CmdAddWithStopCh(
 		},
 	}
 	err = rtnllink.Create(c, ifname, linkinfo)
+	// Keep f reachable until kernel finishes looking up the fd.
+	runtime.KeepAlive(f)
 	if err != nil {
 		return err
 	}
