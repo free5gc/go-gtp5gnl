@@ -5,7 +5,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/free5gc/go-gtp5gnl"
+	gtp5gnl "github.com/free5gc/go-gtp5gnl"
 	"github.com/khirono/go-nl"
 	"github.com/khirono/go-rtnllink"
 )
@@ -44,7 +44,7 @@ func CmdDel(ifname string) error {
 
 func CmdAdd(ifname string, role int) error {
 	stopChan := make(chan bool)
-	return CmdAddWithStopCh(ifname, role, 131072, "", "", stopChan)
+	return CmdAddWithStopCh(ifname, role, 131072, "", stopChan)
 }
 
 func CmdAddWithStopCh(
@@ -52,7 +52,6 @@ func CmdAddWithStopCh(
 	role int,
 	hashSize int,
 	ipAddr string,
-	ethDev string,
 	stopChan chan bool,
 ) error {
 	var wg sync.WaitGroup
@@ -107,14 +106,6 @@ func CmdAddWithStopCh(
 			Value: nl.AttrU32(role),
 		},
 	}
-	if ethDev != "" {
-		infoDataVal = append(infoDataVal,
-			nl.Attr{
-				Type:  gtp5gnl.IFLA_ETHERNET_N6_DEV,
-				Value: nl.AttrString(ethDev),
-			},
-		)
-	}
 
 	linkinfo := &nl.Attr{
 		Type: syscall.IFLA_LINKINFO,
@@ -142,4 +133,39 @@ func CmdAddWithStopCh(
 	<-stopChan
 
 	return nil
+}
+
+func CmdSetEthDevs(ifname, devs string) error {
+	var wg sync.WaitGroup
+	mux, err := nl.NewMux()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		mux.Close()
+		wg.Wait()
+	}()
+	wg.Add(1)
+	go func() {
+		mux.Serve()
+		wg.Done()
+	}()
+
+	conn, err := nl.Open(syscall.NETLINK_GENERIC)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	c, err := gtp5gnl.NewClient(conn, mux)
+	if err != nil {
+		return err
+	}
+
+	link, err := gtp5gnl.GetLink(ifname)
+	if err != nil {
+		return err
+	}
+
+	return gtp5gnl.SetEthDevs(c, link, devs)
 }
